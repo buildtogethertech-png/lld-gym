@@ -29,8 +29,20 @@ To learn more about Next.js, take a look at the following resources:
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-## Deploy on Vercel
+## Deploy (Vercel)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. Push this repo to GitHub (or connect a local folder in the [Vercel dashboard](https://vercel.com/new)).
+2. **Environment variables** — add every key from `.env.example` for production. Important:
+   - `DATABASE_URL` — hosted Postgres (Neon, Supabase, RDS, …). Use a **dedicated database per environment** (e.g. `lld-gym-production`); tables use the default `public` schema (no `?schema=` needed).
+   - `NEXTAUTH_URL` — your live site URL, e.g. `https://your-app.vercel.app` (must match the URL users open).
+   - `NEXTAUTH_SECRET` — long random string (e.g. `openssl rand -base64 32`).
+   - Google OAuth: add the production **Authorized redirect URI** `https://<your-domain>/api/auth/callback/google`.
+   - Razorpay: same **test or live** key pair for `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, and `NEXT_PUBLIC_RAZORPAY_KEY_ID`.
+3. **Database (greenfield)** — schema lives only in `prisma/schema.prisma`. With `DATABASE_URL` pointing at the target DB (local or hosted), run once:
+   ```bash
+   npm run db:push
+   ```
+   (`migrate deploy` is optional if you rely on the checked-in migration history; for a brand-new database, `db push` is enough.)
+4. Redeploy after changing env vars. The build runs `prisma generate && next build` (`vercel.json` defaults region to **Mumbai `bom1`** for lower latency in India).
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+CLI: `npx vercel` (link project), then `npx vercel --prod` for production.

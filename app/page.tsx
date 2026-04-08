@@ -1,65 +1,247 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useEffect, useState, useCallback } from "react";
+import { useSession } from "next-auth/react";
+import Link from "next/link";
+import { PROBLEMS } from "@/lib/problems";
+import { FOUNDATION_PROBLEMS, FOUNDATION_GROUPS } from "@/lib/foundation-problems";
+import ProblemCard from "@/components/ProblemCard";
+
+const DIFFICULTY_GROUPS = [
+  { label: "Beginner", range: [1, 3], emoji: "🌱" },
+  { label: "Intermediate", range: [4, 6], emoji: "🔥" },
+  { label: "Advanced", range: [7, 10], emoji: "⚡" },
+];
+
+type SubmissionMap = Record<string, { completed: boolean; score?: number | null }>;
+
+export default function HomePage() {
+  const { data: session, status } = useSession();
+  const [submissions, setSubmissions] = useState<SubmissionMap>({});
+  const [isPaid, setIsPaid] = useState(false);
+
+  const ALL_PROBLEMS = [...FOUNDATION_PROBLEMS, ...PROBLEMS];
+
+  const loadSubmissions = useCallback(async () => {
+    if (session) {
+      const res = await fetch("/api/submissions");
+      if (res.ok) {
+        const list: { problemId: string; completed: boolean; score: number | null }[] =
+          await res.json();
+        const map: SubmissionMap = {};
+        list.forEach((s) => (map[s.problemId] = { completed: s.completed, score: s.score }));
+        setSubmissions(map);
+      }
+    } else {
+      const map: SubmissionMap = {};
+      ALL_PROBLEMS.forEach((p) => {
+        try {
+          const raw = localStorage.getItem(`lld_sub_${p.id}`);
+          if (raw) map[p.id] = JSON.parse(raw);
+        } catch {}
+      });
+      setSubmissions(map);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session]);
+
+  useEffect(() => {
+    if (status !== "loading") loadSubmissions();
+  }, [status, loadSubmissions]);
+
+  useEffect(() => {
+    if (session) {
+      fetch("/api/user/me", { cache: "no-store" })
+        .then((r) => r.json())
+        .then((d) => setIsPaid(d.isPaid ?? false));
+    }
+  }, [session]);
+
+  useEffect(() => {
+    const refresh = () => loadSubmissions();
+    window.addEventListener("lld:progress", refresh);
+    return () => window.removeEventListener("lld:progress", refresh);
+  }, [loadSubmissions]);
+
+  const foundationCompleted = FOUNDATION_PROBLEMS.filter(p => submissions[p.id]?.completed).length;
+  const lldCompleted = PROBLEMS.filter(p => submissions[p.id]?.completed).length;
+  const totalCompleted = foundationCompleted + lldCompleted;
+  const totalProblems = ALL_PROBLEMS.length;
+  const pct = totalProblems > 0 ? Math.round((totalCompleted / totalProblems) * 100) : 0;
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <div>
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold tracking-tight mb-2">
+          LLD Gym <span className="text-yellow-400">⚡</span>
+        </h1>
+        <p className="text-gray-400 max-w-xl">
+          {session
+            ? `Welcome back, ${session.user?.name ?? session.user?.email?.split("@")[0]}. Keep pushing.`
+            : "OOP → SOLID → Patterns → LLD. Build your design foundation from scratch."}
+        </p>
+        <p className="mt-3 text-sm">
+          <Link href="/learn" className="text-yellow-400 hover:text-yellow-300 transition-colors">
+            Why LLD matters + OOP and patterns (free reading) →
+          </Link>
+        </p>
+      </div>
+
+      {/* Progress */}
+      <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 mb-8">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <p className="text-sm text-gray-400">Overall Progress</p>
+            <p className="text-2xl font-bold">
+              {totalCompleted}
+              <span className="text-gray-500 text-lg font-normal"> / {totalProblems}</span>
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-3xl font-bold text-yellow-400">{pct}%</p>
+            <p className="text-xs text-gray-500">completed</p>
+          </div>
+        </div>
+        <div className="w-full bg-gray-800 rounded-full h-2.5 overflow-hidden">
+          <div
+            className="h-2.5 rounded-full bg-yellow-400 transition-all duration-500"
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+        {/* Sub-progress */}
+        <div className="flex gap-4 mt-3">
+          <p className="text-xs text-gray-600">
+            <span className="text-gray-400">{foundationCompleted}/{FOUNDATION_PROBLEMS.length}</span> foundations
+          </p>
+          <p className="text-xs text-gray-600">
+            <span className="text-gray-400">{lldCompleted}/{PROBLEMS.length}</span> LLD problems
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </div>
+
+      {/* Learning path banner */}
+      <div className="bg-gray-900 border border-yellow-400/20 rounded-xl p-4 mb-10">
+        <div className="flex items-center gap-2 mb-3">
+          <span className="text-yellow-400 font-semibold text-sm">Recommended path</span>
         </div>
-      </main>
+        <div className="flex items-center gap-2 flex-wrap text-xs text-gray-400">
+          {[
+            { label: "🧱 OOP Foundations", done: FOUNDATION_PROBLEMS.filter(p => p.topic === "OOP" && submissions[p.id]?.completed).length, total: FOUNDATION_PROBLEMS.filter(p => p.topic === "OOP").length },
+            { label: "⚖️ SOLID Principles", done: FOUNDATION_PROBLEMS.filter(p => p.topic === "SOLID" && submissions[p.id]?.completed).length, total: FOUNDATION_PROBLEMS.filter(p => p.topic === "SOLID").length },
+            { label: "🔮 Design Patterns", done: FOUNDATION_PROBLEMS.filter(p => p.topic === "Design Patterns" && submissions[p.id]?.completed).length, total: FOUNDATION_PROBLEMS.filter(p => p.topic === "Design Patterns").length },
+            { label: "🌱 LLD Beginner", done: PROBLEMS.filter(p => p.difficulty <= 3 && submissions[p.id]?.completed).length, total: PROBLEMS.filter(p => p.difficulty <= 3).length },
+            { label: "🔥 LLD Intermediate", done: PROBLEMS.filter(p => p.difficulty >= 4 && p.difficulty <= 6 && submissions[p.id]?.completed).length, total: PROBLEMS.filter(p => p.difficulty >= 4 && p.difficulty <= 6).length },
+            { label: "⚡ LLD Advanced", done: PROBLEMS.filter(p => p.difficulty >= 7 && submissions[p.id]?.completed).length, total: PROBLEMS.filter(p => p.difficulty >= 7).length },
+          ].map((step, i) => (
+            <div key={step.label} className="flex items-center gap-2">
+              {i > 0 && <span className="text-gray-700">→</span>}
+              <span className={`px-2 py-1 rounded-lg border ${step.done === step.total && step.total > 0 ? "border-green-500/30 text-green-400 bg-green-500/10" : "border-gray-800"}`}>
+                {step.label} <span className="text-gray-600">{step.done}/{step.total}</span>
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── FOUNDATION TRACK ────────────────────────────── */}
+      <div className="mb-12">
+        <div className="flex items-center gap-3 mb-6">
+          <div>
+            <h2 className="text-xl font-bold">Foundation Track</h2>
+            <p className="text-xs text-gray-500 mt-0.5">Start here — build the mental models before tackling full LLD systems</p>
+          </div>
+          <span className="ml-auto text-xs text-gray-500 bg-gray-900 border border-gray-800 px-2.5 py-1 rounded-full">
+            {foundationCompleted}/{FOUNDATION_PROBLEMS.length} done
+          </span>
+        </div>
+
+        <div className="space-y-8">
+          {FOUNDATION_GROUPS.map((group) => {
+            const groupProblems = FOUNDATION_PROBLEMS.filter(p => p.topic === group.topic);
+            const groupDone = groupProblems.filter(p => submissions[p.id]?.completed).length;
+
+            return (
+              <section key={group.id}>
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <h3 className="text-base font-semibold flex items-center gap-2">
+                      <span>{group.emoji}</span>
+                      <span>{group.label}</span>
+                    </h3>
+                    <p className="text-xs text-gray-600 mt-0.5 ml-7">{group.description}</p>
+                  </div>
+                  <span className="text-sm text-gray-500 shrink-0 ml-4">
+                    {groupDone}/{groupProblems.length} done
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  {groupProblems.map((problem) => (
+                    <ProblemCard
+                      key={problem.id}
+                      problem={problem}
+                      completed={!!submissions[problem.id]?.completed}
+                      score={submissions[problem.id]?.score ?? null}
+                      index={FOUNDATION_PROBLEMS.indexOf(problem)}
+                      isPaid={isPaid}
+                    />
+                  ))}
+                </div>
+              </section>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Divider */}
+      <div className="flex items-center gap-4 mb-10">
+        <div className="flex-1 h-px bg-gray-800" />
+        <span className="text-xs text-gray-600 font-medium tracking-widest uppercase">LLD Problems</span>
+        <div className="flex-1 h-px bg-gray-800" />
+      </div>
+
+      {/* ── LLD PROBLEMS ────────────────────────────────── */}
+      <div className="space-y-10">
+        {DIFFICULTY_GROUPS.map((group) => {
+          const groupProblems = PROBLEMS.filter(
+            (p) => p.difficulty >= group.range[0] && p.difficulty <= group.range[1]
+          );
+          const groupCompleted = groupProblems.filter((p) => submissions[p.id]?.completed).length;
+
+          return (
+            <section key={group.label}>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-lg font-semibold flex items-center gap-2">
+                  <span>{group.emoji}</span>
+                  <span>{group.label}</span>
+                  <span className="text-sm text-gray-500 font-normal">
+                    L{group.range[0]}–L{group.range[1]}
+                  </span>
+                </h2>
+                <span className="text-sm text-gray-500">
+                  {groupCompleted}/{groupProblems.length} done
+                </span>
+              </div>
+              <div className="space-y-2">
+                {groupProblems.map((problem) => (
+                  <ProblemCard
+                    key={problem.id}
+                    problem={problem}
+                    completed={!!submissions[problem.id]?.completed}
+                    score={submissions[problem.id]?.score ?? null}
+                    index={PROBLEMS.indexOf(problem)}
+                    isPaid={isPaid}
+                  />
+                ))}
+              </div>
+            </section>
+          );
+        })}
+      </div>
+
+      <p className="mt-12 text-center text-xs text-gray-700">
+        Built for engineers who want to think, not memorize.
+      </p>
     </div>
   );
 }
