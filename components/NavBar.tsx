@@ -23,6 +23,9 @@ export default function NavBar() {
           <Link href="/learn" className="text-sm text-gray-400 hover:text-gray-200 transition-colors hidden sm:block">
             Learn
           </Link>
+          <Link href="/uml-practice/my-diagrams" className="text-sm text-gray-400 hover:text-gray-200 transition-colors hidden sm:block">
+            UML
+          </Link>
           {session && (
             <Link
               href="/submissions"

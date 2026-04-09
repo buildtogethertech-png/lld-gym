@@ -30,7 +30,9 @@
       "Bash(psql \"postgresql://neondb_owner:npg_z8WLc1SFmbnq@ep-quiet-forest-a4g6xsa3-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require\" -c \"\\\\d public.users\")",
       "Bash(psql 'postgresql://neondb_owner:npg_z8WLc1SFmbnq@ep-quiet-forest-a4g6xsa3-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require' -c ':*)",
       "WebSearch",
-      "Bash(node -e \"const { PrismaClient } = require\\('@prisma/client'\\); const p = new PrismaClient\\(\\); console.log\\(typeof p.topicNote\\);\")"
+      "Bash(node -e \"const { PrismaClient } = require\\('@prisma/client'\\); const p = new PrismaClient\\(\\); console.log\\(typeof p.topicNote\\);\")",
+      "Bash(mkdir -p /Users/gauravmandal/reach-lld/app/api/diagrams/\\\\[id\\\\])",
+      "Bash(mkdir -p /Users/gauravmandal/reach-lld/app/uml-practice/\\\\[id\\\\])"
     ],
     "additionalDirectories": [
       "/Users/gauravmandal/reach-lld/app/api/evaluation-logs",

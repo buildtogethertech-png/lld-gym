@@ -13,6 +13,7 @@ import { generateStarterCode } from "@/lib/starter-code";
 import { AUTO_COMPLETE_MIN_SCORE } from "@/lib/eval-completion";
 
 const CodeEditor = dynamic(() => import("@/components/CodeEditor"), { ssr: false });
+const UMLEditor = dynamic(() => import("@/app/uml-practice/UMLEditor"), { ssr: false });
 
 
 const LANGUAGES = [
@@ -99,6 +100,9 @@ export default function ProblemDetailClient({ problem }: { problem: Problem }) {
   const [isPaid, setIsPaid] = useState(false);
   const [language, setLanguage] = useState<LangId>("java");
   const [autoSuggest, setAutoSuggest] = useState(true);
+  const [rightMode, setRightMode] = useState<"code" | "uml">("code");
+  const [umlFullscreen, setUmlFullscreen] = useState(false);
+  const [topBarHidden, setTopBarHidden] = useState(false);
   const [leftTab, setLeftTab] = useState<"description" | "submissions">("description");
 
   interface SubLog {
@@ -271,32 +275,55 @@ export default function ProblemDetailClient({ problem }: { problem: Problem }) {
     <div className="fixed inset-0 top-14 bg-[#0f0f0f] flex flex-col">
 
       {/* ── Top bar ── */}
-      <div className="h-10 border-b border-gray-800 flex items-center justify-between px-3 sm:px-4 lg:px-5 shrink-0 bg-[#161616]">
-        <div className="flex items-center gap-3">
-          <Link href="/" className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-gray-300 transition-colors">
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+      {topBarHidden ? (
+        <div className="shrink-0 flex justify-center">
+          <button
+            onClick={() => setTopBarHidden(false)}
+            title="Show problem info"
+            className="flex items-center gap-1 text-xs text-gray-700 hover:text-gray-400 transition-colors py-0.5 px-3"
+          >
+            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
             </svg>
-            Problems
-          </Link>
-          <span className="text-gray-700">·</span>
-          <span className="text-sm font-medium text-gray-200 truncate max-w-xs">{problem.title}</span>
+          </button>
         </div>
-        <div className="flex items-center gap-2">
-          {problem.topic && (
-            <span className="text-xs px-2 py-0.5 rounded-full border text-purple-400 bg-purple-400/10 border-purple-400/20">{problem.topic}</span>
-          )}
-          <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${diff.color}`}>
-            L{problem.difficulty} · {diff.label}
-          </span>
+      ) : (
+        <div className="h-10 border-b border-gray-800 flex items-center justify-between px-3 sm:px-4 lg:px-5 shrink-0 bg-[#161616]">
+          <div className="flex items-center gap-3">
+            <Link href="/" className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-gray-300 transition-colors">
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
+              Problems
+            </Link>
+            <span className="text-gray-700">·</span>
+            <span className="text-sm font-medium text-gray-200 truncate max-w-xs">{problem.title}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            {problem.topic && (
+              <span className="text-xs px-2 py-0.5 rounded-full border text-purple-400 bg-purple-400/10 border-purple-400/20">{problem.topic}</span>
+            )}
+            <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${diff.color}`}>
+              L{problem.difficulty} · {diff.label}
+            </span>
+            <button
+              onClick={() => setTopBarHidden(true)}
+              title="Hide problem info"
+              className="ml-1 flex items-center justify-center w-6 h-6 rounded text-gray-600 hover:text-gray-300 hover:bg-gray-800 transition-colors"
+            >
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
+              </svg>
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ── Split panes ── */}
       <div ref={containerRef} className="flex flex-1 overflow-hidden">
 
         {/* LEFT — Problem description / Submissions */}
-        <div className="flex flex-col overflow-hidden" style={{ width: `${leftPct}%` }}>
+        <div className={`flex flex-col overflow-hidden ${umlFullscreen ? "hidden" : ""}`} style={{ width: `${leftPct}%` }}>
 
           {/* Tab bar */}
           <div className="shrink-0 flex border-b border-gray-800 bg-[#161616] pl-2 sm:pl-3 lg:pl-4">
@@ -532,7 +559,7 @@ export default function ProblemDetailClient({ problem }: { problem: Problem }) {
         {/* ── Drag handle ── */}
         <div
           onMouseDown={handleDragStart}
-          className="w-1 bg-gray-800 hover:bg-yellow-400/50 active:bg-yellow-400 cursor-col-resize transition-colors shrink-0 relative group"
+          className={`w-1 bg-gray-800 hover:bg-yellow-400/50 active:bg-yellow-400 cursor-col-resize transition-colors shrink-0 relative group ${umlFullscreen ? "hidden" : ""}`}
         >
           {/* Visual grip dots */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
@@ -545,13 +572,12 @@ export default function ProblemDetailClient({ problem }: { problem: Problem }) {
         {/* RIGHT — Editor */}
         <div className="flex flex-col flex-1 overflow-hidden bg-[#1e1e1e]">
 
-          {/* Editor toolbar — language + suggest grouped; saved state on the right */}
-          <div className="h-11 flex items-center justify-between gap-3 px-3 sm:px-4 border-b border-gray-800 bg-[#161616] shrink-0">
-            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          {/* Editor toolbar */}
+          <div className="h-11 flex items-center gap-3 px-3 sm:px-4 border-b border-gray-800 bg-[#161616] shrink-0">
+            {/* LEFT: language + suggest (hidden in UML mode) */}
+            <div className={`flex items-center gap-2 sm:gap-3 min-w-0 flex-1 ${rightMode === "uml" ? "invisible" : ""}`}>
               <div className="relative flex items-center">
-                <label htmlFor="editor-language" className="sr-only">
-                  Language
-                </label>
+                <label htmlFor="editor-language" className="sr-only">Language</label>
                 <select
                   id="editor-language"
                   value={language}
@@ -559,25 +585,13 @@ export default function ProblemDetailClient({ problem }: { problem: Problem }) {
                   className="appearance-none h-8 min-w-[7.5rem] sm:min-w-[8.5rem] pl-3 pr-8 rounded-lg border border-gray-600 bg-[#1e1e1e] text-gray-100 text-xs font-medium shadow-sm cursor-pointer hover:border-gray-500 hover:bg-[#252525] focus:outline-none focus:ring-1 focus:ring-yellow-400/50 focus:border-yellow-400/60 transition-colors"
                 >
                   {LANGUAGES.map((l) => (
-                    <option key={l.id} value={l.id}>
-                      {l.label}
-                    </option>
+                    <option key={l.id} value={l.id}>{l.label}</option>
                   ))}
                 </select>
-                <svg
-                  className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                  aria-hidden
-                >
+                <svg className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                 </svg>
               </div>
-
-              <span className="hidden sm:block w-px h-5 bg-gray-700 shrink-0" aria-hidden />
-
               <button
                 type="button"
                 onClick={() => setAutoSuggest((v) => !v)}
@@ -595,22 +609,63 @@ export default function ProblemDetailClient({ problem }: { problem: Problem }) {
               </button>
             </div>
 
-            <span
-              className={`text-xs tabular-nums shrink-0 transition-opacity ${savedAt ? "opacity-100 text-green-400" : "opacity-0 pointer-events-none"}`}
-            >
-              ✓ Saved {savedAt}
-            </span>
+            {/* RIGHT: saved indicator + Code/UML toggle */}
+            <div className="flex items-center gap-3 shrink-0 ml-auto">
+              <span className={`text-xs tabular-nums transition-opacity ${savedAt ? "opacity-100 text-green-400" : "opacity-0 pointer-events-none"}`}>
+                ✓ Saved {savedAt}
+              </span>
+              <div className="flex items-center rounded-lg border border-gray-700 overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => { setRightMode("code"); setUmlFullscreen(false); setTopBarHidden(false); }}
+                  className={`px-2.5 py-1 text-xs font-medium transition-colors ${rightMode === "code" ? "bg-gray-700 text-gray-100" : "text-gray-500 hover:text-gray-300"}`}
+                >
+                  Code
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRightMode("uml")}
+                  className={`px-2.5 py-1 text-xs font-medium transition-colors ${rightMode === "uml" ? "bg-gray-700 text-gray-100" : "text-gray-500 hover:text-gray-300"}`}
+                >
+                  📐 UML
+                </button>
+              </div>
+              {rightMode === "uml" && (
+                <button
+                  type="button"
+                  onClick={() => { setUmlFullscreen((v) => { setTopBarHidden(!v); return !v; }); }}
+                  title={umlFullscreen ? "Exit fullscreen" : "Fullscreen UML"}
+                  className="flex items-center justify-center w-7 h-7 rounded-lg border border-gray-700 text-gray-500 hover:text-gray-200 hover:border-gray-600 transition-colors"
+                >
+                  {umlFullscreen ? (
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 9L4 4m0 0h5m-5 0v5M15 9l5-5m0 0h-5m5 0v5M9 15l-5 5m0 0h5m-5 0v-5M15 15l5 5m0 0h-5m5 0v-5" />
+                    </svg>
+                  ) : (
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5h-4m4 0v-4m0 4l-5-5" />
+                    </svg>
+                  )}
+                </button>
+              )}
+            </div>
           </div>
 
-          {/* Monaco — fills all remaining height */}
+          {/* Monaco or UML canvas */}
           <div className="flex-1 overflow-hidden">
-            <CodeEditor
-              value={answer || generateStarterCode(problem, language)}
-              onChange={handleChange}
-              fillHeight
-              language={language}
-              autoSuggest={autoSuggest}
-            />
+            {rightMode === "code" ? (
+              <CodeEditor
+                value={answer || generateStarterCode(problem, language)}
+                onChange={handleChange}
+                fillHeight
+                language={language}
+                autoSuggest={autoSuggest}
+              />
+            ) : (
+              <div className="w-full h-full">
+                <UMLEditor embedded initialTitle={problem.title} />
+              </div>
+            )}
           </div>
 
           {/* ── Bottom action bar (CTA right — same affordance as LeetCode Submit) ── */}

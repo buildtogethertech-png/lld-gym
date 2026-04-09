@@ -20,6 +20,7 @@
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
     "@prisma/client": "^6.19.3",
+    "@xyflow/react": "^12.10.2",
     "bcryptjs": "^3.0.3",
     "next": "^14.2.35",
     "next-auth": "^4.24.13",
