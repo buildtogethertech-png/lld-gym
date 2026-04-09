@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { getUid } from "@/lib/get-uid";
 import { prisma } from "@/lib/prisma";
-
-const MAX_LENGTH = 1500;
+import { NOTE_MAX_LENGTH } from "@/lib/note-limits";
 
 export async function GET(_req: Request, { params }: { params: { topicId: string } }) {
   const uid = await getUid();
@@ -23,7 +22,7 @@ export async function PUT(req: Request, { params }: { params: { topicId: string 
   const { content } = await req.json();
   if (typeof content !== "string") return NextResponse.json({ error: "Invalid" }, { status: 400 });
 
-  const trimmed = content.slice(0, MAX_LENGTH);
+  const trimmed = content.slice(0, NOTE_MAX_LENGTH);
 
   const note = await prisma.topicNote.upsert({
     where: { userId_topicId: { userId: uid, topicId: params.topicId } },

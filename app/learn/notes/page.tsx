@@ -4,21 +4,12 @@ import type { Metadata } from "next";
 import { getUid } from "@/lib/get-uid";
 import { prisma } from "@/lib/prisma";
 import { TOPIC_MAP } from "@/lib/topics";
+import { renderTopicNoteHtml } from "@/lib/render-topic-note";
 
 export const metadata: Metadata = {
   title: "My Notes — LLD Hub",
   description: "Your topic notes in one place.",
 };
-
-function renderNote(text: string) {
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-    .replace(/==(.+?)==/g, '<mark style="background:rgba(250,204,21,0.25);color:#fde68a;border-radius:2px;padding:0 2px">$1</mark>')
-    .replace(/\n/g, "<br />");
-}
 
 export default async function MyNotesPage() {
   const uid = await getUid();
@@ -94,7 +85,7 @@ export default async function MyNotesPage() {
               {/* Note content */}
               <div
                 className="px-4 py-3 text-sm text-gray-400 leading-relaxed"
-                dangerouslySetInnerHTML={{ __html: renderNote(content) }}
+                dangerouslySetInnerHTML={{ __html: renderTopicNoteHtml(content) }}
               />
             </div>
           ))}

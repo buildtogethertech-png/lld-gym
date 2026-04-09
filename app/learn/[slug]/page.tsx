@@ -6,6 +6,8 @@ import { FOUNDATION_PROBLEMS } from "@/lib/foundation-problems";
 import { PROBLEMS } from "@/lib/problems";
 import type { Problem } from "@/lib/types";
 import NoteEditor from "@/components/NoteEditor";
+import CodeBlock from "@/components/learn/CodeBlock";
+import { getTopicSideContent } from "@/lib/topic-side-content";
 
 const ALL_PROBLEMS = [...FOUNDATION_PROBLEMS, ...PROBLEMS];
 
@@ -46,87 +48,112 @@ export default function TopicPage({ params }: { params: { slug: string } }) {
   if (!topic) notFound();
 
   const problems = getTopicProblems(topic.matchTags);
+  const side = getTopicSideContent(topic);
 
   return (
-    <div className="max-w-3xl">
-      {/* Back */}
-      <div className="mb-6">
-        <Link
-          href="/learn"
-          className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-300 transition-colors"
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
-          Back to Learn
-        </Link>
-      </div>
-
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <span className="text-4xl">{topic.emoji}</span>
-          <div>
-            <h1 className="text-2xl font-bold">{topic.title}</h1>
-            <p className="text-gray-400 text-sm">{topic.subtitle}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Section 1: Video ── */}
-      <section className="mb-10">
-        <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">
-          🎥 Watch
-        </h2>
-        {topic.videoUrl ? (
-          <div className="relative w-full rounded-xl overflow-hidden border border-gray-800 bg-black" style={{ paddingBottom: "56.25%" }}>
-            <iframe
-              src={topic.videoUrl}
-              title={topic.title}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              className="absolute inset-0 w-full h-full"
-            />
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-gray-800 bg-gray-900/30 py-12 text-center">
-            <span className="text-3xl">🎬</span>
-            <p className="text-sm font-medium text-gray-400">Video coming soon</p>
-            <p className="text-xs text-gray-600">Continue to the notes and practice below</p>
-          </div>
-        )}
-
-        <p className="mt-3 text-xs text-gray-500 italic text-center">
-          Watching builds intuition. Solving builds skill. Don't stop here.
-        </p>
-      </section>
-
-      {/* ── Section 2: Key Concepts ── */}
-      <section className="mb-10">
-        <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">
-          📘 Key Concepts
-        </h2>
-        <div className="space-y-3">
-          {topic.concepts.map((concept, i) => (
-            <div key={i} className="bg-[#161616] border border-gray-800 rounded-xl p-4">
-              <p className="text-sm font-semibold text-gray-200 mb-1">{concept.title}</p>
-              <p className="text-sm text-gray-400 leading-relaxed">{concept.body}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── Section 3: My Notes ── */}
-      <section className="mb-10">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-            📝 My Notes
-          </h2>
-          <Link href="/learn/notes" className="text-xs text-gray-600 hover:text-gray-400 transition-colors">
-            View all notes →
+    <div className="w-full max-w-none">
+      {/* Compact top: back + title + one-line takeaways */}
+      <header className="mb-5 sm:mb-6">
+        <div className="flex flex-wrap items-start gap-x-4 gap-y-2">
+          <Link
+            href="/learn"
+            className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-gray-300 transition-colors shrink-0 mt-1"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+            Learn
           </Link>
+          <div className="flex items-start gap-2 min-w-0 flex-1">
+            <span className="text-2xl leading-none shrink-0" aria-hidden>
+              {topic.emoji}
+            </span>
+            <div className="min-w-0">
+              <h1 className="text-lg sm:text-xl font-bold tracking-tight text-gray-100">
+                {topic.title}
+                <span className="font-normal text-gray-500"> — {topic.subtitle}</span>
+              </h1>
+              <p className="mt-1.5 text-xs text-gray-500 leading-snug line-clamp-2 sm:line-clamp-none">
+                {side.takeaways.join(" · ")}
+              </p>
+            </div>
+          </div>
         </div>
-        <NoteEditor topicId={topic.id} />
+      </header>
+
+      {/* Video (left) + notes (right) — same row on xl */}
+      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.2fr)_minmax(300px,420px)] gap-6 xl:gap-8 2xl:gap-10 xl:items-stretch mb-12">
+        <section className="min-w-0 flex flex-col">
+          <h2 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2">
+            Watch
+          </h2>
+          {topic.videoUrl ? (
+            <div className="relative w-full rounded-xl overflow-hidden border border-gray-800 bg-black shadow-xl shadow-black/40" style={{ paddingBottom: "56.25%" }}>
+              <iframe
+                src={topic.videoUrl}
+                title={topic.title}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="absolute inset-0 w-full h-full"
+              />
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-gray-800 bg-gray-900/30 py-12 text-center">
+              <span className="text-3xl">🎬</span>
+              <p className="text-sm font-medium text-gray-400">Video coming soon</p>
+              <p className="text-xs text-gray-600">Use the notes panel to capture ideas anyway</p>
+            </div>
+          )}
+
+          <p className="mt-2 text-[11px] text-gray-600 text-center xl:text-left shrink-0">
+            Watch, then scroll down for code and practice.
+          </p>
+        </section>
+
+        <aside className="min-w-0 flex flex-col xl:h-full xl:min-h-0">
+          <div className="flex items-center justify-between gap-2 mb-2 shrink-0">
+            <h2 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">
+              My notes
+            </h2>
+            <Link href="/learn/notes" className="text-xs text-gray-600 hover:text-gray-400 transition-colors whitespace-nowrap">
+              All notes →
+            </Link>
+          </div>
+          <div className="flex-1 min-h-[280px] xl:min-h-0 flex flex-col">
+            <NoteEditor topicId={topic.id} fillHeight />
+          </div>
+        </aside>
+      </div>
+
+      {/* In code + Key ideas — bottom */}
+      <section className="mb-12 space-y-10">
+        <div>
+          <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">
+            In code
+          </h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 xl:gap-6">
+            {side.examples.map((ex, i) => (
+              <CodeBlock key={i} title={ex.title} code={ex.code} />
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">
+            📘 Key ideas
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-4">
+            {topic.concepts.map((concept, i) => (
+              <div
+                key={i}
+                className="bg-[#161616] border border-gray-800 rounded-xl p-4 hover:border-gray-700/90 transition-colors"
+              >
+                <p className="text-sm font-semibold text-gray-200 mb-1.5">{concept.title}</p>
+                <p className="text-sm text-gray-400 leading-relaxed">{concept.body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
       </section>
 
       {/* ── Section 4: Practice Problems ── */}

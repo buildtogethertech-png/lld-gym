@@ -22,7 +22,7 @@ const totalProblems = ALL_PROBLEMS.length;
 
 export default function LearnPage() {
   return (
-    <div className="max-w-[1200px]">
+    <div className="w-full max-w-none">
       {/* Back */}
       <Link
         href="/"
@@ -34,7 +34,7 @@ export default function LearnPage() {
         Back
       </Link>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_268px] gap-10 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_minmax(260px,320px)] xl:gap-12 gap-10 items-start">
 
         {/* ── Left: main content ── */}
         <div>
