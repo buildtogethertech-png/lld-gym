@@ -17,3 +17,13 @@ export async function sendAdminMail(subject: string, html: string) {
     html,
   });
 }
+
+export async function sendFeedbackMail(subject: string, html: string) {
+  if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) return;
+  await transporter.sendMail({
+    from: `"LLD Hub Feedback" <${process.env.GMAIL_USER}>`,
+    to: "support@lldhub.in",
+    subject,
+    html,
+  });
+}

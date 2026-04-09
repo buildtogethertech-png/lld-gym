@@ -5,6 +5,7 @@ import { TOPIC_MAP, ALL_TOPICS } from "@/lib/topics";
 import { FOUNDATION_PROBLEMS } from "@/lib/foundation-problems";
 import { PROBLEMS } from "@/lib/problems";
 import type { Problem } from "@/lib/types";
+import NoteEditor from "@/components/NoteEditor";
 
 const ALL_PROBLEMS = [...FOUNDATION_PROBLEMS, ...PROBLEMS];
 
@@ -115,7 +116,20 @@ export default function TopicPage({ params }: { params: { slug: string } }) {
         </div>
       </section>
 
-      {/* ── Section 3: Practice Problems ── */}
+      {/* ── Section 3: My Notes ── */}
+      <section className="mb-10">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+            📝 My Notes
+          </h2>
+          <Link href="/learn/notes" className="text-xs text-gray-600 hover:text-gray-400 transition-colors">
+            View all notes →
+          </Link>
+        </div>
+        <NoteEditor topicId={topic.id} />
+      </section>
+
+      {/* ── Section 4: Practice Problems ── */}
       <section>
         <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">
           🧠 Practice — Apply What You Learned
