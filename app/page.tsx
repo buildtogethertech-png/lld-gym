@@ -88,59 +88,53 @@ export default function HomePage() {
         </p>
       </div>
 
-      {/* Progress */}
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 mb-8">
-        <div className="flex items-center justify-between mb-3">
-          <div>
-            <p className="text-sm text-gray-400">Overall Progress</p>
-            <p className="text-2xl font-bold">
-              {totalCompleted}
-              <span className="text-gray-500 text-lg font-normal"> / {totalProblems}</span>
-            </p>
+      {/* Progress + Path — single compact bar */}
+      <div className="border border-gray-800 rounded-xl overflow-hidden mb-10">
+        {/* Top row: progress */}
+        <div className="flex items-center gap-4 px-4 py-3 bg-gray-900/60">
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-sm font-semibold text-yellow-400">{pct}%</span>
+            <span className="text-xs text-gray-500">{totalCompleted}/{totalProblems} done</span>
           </div>
-          <div className="text-right">
-            <p className="text-3xl font-bold text-yellow-400">{pct}%</p>
-            <p className="text-xs text-gray-500">completed</p>
+          <div className="flex-1 bg-gray-800 rounded-full h-1.5 overflow-hidden">
+            <div
+              className="h-1.5 rounded-full bg-yellow-400 transition-all duration-500"
+              style={{ width: `${pct}%` }}
+            />
           </div>
+          <span className="text-xs text-gray-600 shrink-0 hidden sm:block">
+            {foundationCompleted}/{FOUNDATION_PROBLEMS.length} foundations · {lldCompleted}/{PROBLEMS.length} LLD
+          </span>
         </div>
-        <div className="w-full bg-gray-800 rounded-full h-2.5 overflow-hidden">
-          <div
-            className="h-2.5 rounded-full bg-yellow-400 transition-all duration-500"
-            style={{ width: `${pct}%` }}
-          />
-        </div>
-        {/* Sub-progress */}
-        <div className="flex gap-4 mt-3">
-          <p className="text-xs text-gray-600">
-            <span className="text-gray-400">{foundationCompleted}/{FOUNDATION_PROBLEMS.length}</span> foundations
-          </p>
-          <p className="text-xs text-gray-600">
-            <span className="text-gray-400">{lldCompleted}/{PROBLEMS.length}</span> LLD problems
-          </p>
-        </div>
-      </div>
 
-      {/* Learning path banner */}
-      <div className="bg-gray-900 border border-yellow-400/20 rounded-xl p-4 mb-10">
-        <div className="flex items-center gap-2 mb-3">
-          <span className="text-yellow-400 font-semibold text-sm">Recommended path</span>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap text-xs text-gray-400">
+        {/* Bottom row: path stages */}
+        <div className="flex items-center gap-1.5 px-4 py-2.5 border-t border-gray-800/60 flex-wrap">
           {[
-            { label: "🧱 OOP Foundations", done: FOUNDATION_PROBLEMS.filter(p => p.topic === "OOP" && submissions[p.id]?.completed).length, total: FOUNDATION_PROBLEMS.filter(p => p.topic === "OOP").length },
-            { label: "⚖️ SOLID Principles", done: FOUNDATION_PROBLEMS.filter(p => p.topic === "SOLID" && submissions[p.id]?.completed).length, total: FOUNDATION_PROBLEMS.filter(p => p.topic === "SOLID").length },
-            { label: "🔮 Design Patterns", done: FOUNDATION_PROBLEMS.filter(p => p.topic === "Design Patterns" && submissions[p.id]?.completed).length, total: FOUNDATION_PROBLEMS.filter(p => p.topic === "Design Patterns").length },
-            { label: "🌱 LLD Beginner", done: PROBLEMS.filter(p => p.difficulty <= 3 && submissions[p.id]?.completed).length, total: PROBLEMS.filter(p => p.difficulty <= 3).length },
-            { label: "🔥 LLD Intermediate", done: PROBLEMS.filter(p => p.difficulty >= 4 && p.difficulty <= 6 && submissions[p.id]?.completed).length, total: PROBLEMS.filter(p => p.difficulty >= 4 && p.difficulty <= 6).length },
-            { label: "⚡ LLD Advanced", done: PROBLEMS.filter(p => p.difficulty >= 7 && submissions[p.id]?.completed).length, total: PROBLEMS.filter(p => p.difficulty >= 7).length },
-          ].map((step, i) => (
-            <div key={step.label} className="flex items-center gap-2">
-              {i > 0 && <span className="text-gray-700">→</span>}
-              <span className={`px-2 py-1 rounded-lg border ${step.done === step.total && step.total > 0 ? "border-green-500/30 text-green-400 bg-green-500/10" : "border-gray-800"}`}>
-                {step.label} <span className="text-gray-600">{step.done}/{step.total}</span>
-              </span>
-            </div>
-          ))}
+            { label: "OOP", emoji: "🧱", anchor: "#oop", done: FOUNDATION_PROBLEMS.filter(p => p.topic === "OOP" && submissions[p.id]?.completed).length, total: FOUNDATION_PROBLEMS.filter(p => p.topic === "OOP").length },
+            { label: "SOLID", emoji: "⚖️", anchor: "#solid", done: FOUNDATION_PROBLEMS.filter(p => p.topic === "SOLID" && submissions[p.id]?.completed).length, total: FOUNDATION_PROBLEMS.filter(p => p.topic === "SOLID").length },
+            { label: "Patterns", emoji: "🔮", anchor: "#patterns", done: FOUNDATION_PROBLEMS.filter(p => p.topic === "Design Patterns" && submissions[p.id]?.completed).length, total: FOUNDATION_PROBLEMS.filter(p => p.topic === "Design Patterns").length },
+            { label: "Beginner", emoji: "🌱", anchor: "#beginner", done: PROBLEMS.filter(p => p.difficulty <= 3 && submissions[p.id]?.completed).length, total: PROBLEMS.filter(p => p.difficulty <= 3).length },
+            { label: "Intermediate", emoji: "🔥", anchor: "#intermediate", done: PROBLEMS.filter(p => p.difficulty >= 4 && p.difficulty <= 6 && submissions[p.id]?.completed).length, total: PROBLEMS.filter(p => p.difficulty >= 4 && p.difficulty <= 6).length },
+            { label: "Advanced", emoji: "⚡", anchor: "#advanced", done: PROBLEMS.filter(p => p.difficulty >= 7 && submissions[p.id]?.completed).length, total: PROBLEMS.filter(p => p.difficulty >= 7).length },
+          ].map((step, i) => {
+            const complete = step.done === step.total && step.total > 0;
+            return (
+              <div key={step.label} className="flex items-center gap-1.5">
+                {i > 0 && <span className="text-gray-800 text-xs">→</span>}
+                <a href={step.anchor} className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-md border transition-opacity hover:opacity-80 ${
+                  complete
+                    ? "border-green-500/30 bg-green-500/10 text-green-400"
+                    : step.done > 0
+                    ? "border-yellow-400/20 bg-yellow-400/5 text-yellow-300"
+                    : "border-gray-800 text-gray-600 hover:border-gray-700 hover:text-gray-400"
+                }`}>
+                  <span>{step.emoji}</span>
+                  <span>{step.label}</span>
+                  <span className="opacity-50">{step.done}/{step.total}</span>
+                </a>
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -162,7 +156,7 @@ export default function HomePage() {
             const groupDone = groupProblems.filter(p => submissions[p.id]?.completed).length;
 
             return (
-              <section key={group.id}>
+              <section key={group.id} id={group.id} className="scroll-mt-20">
                 <div className="flex items-center justify-between mb-3">
                   <div>
                     <h3 className="text-base font-semibold flex items-center gap-2">
@@ -209,7 +203,7 @@ export default function HomePage() {
           const groupCompleted = groupProblems.filter((p) => submissions[p.id]?.completed).length;
 
           return (
-            <section key={group.label}>
+            <section key={group.label} id={group.label.toLowerCase()} className="scroll-mt-20">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-lg font-semibold flex items-center gap-2">
                   <span>{group.emoji}</span>
