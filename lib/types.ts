@@ -15,6 +15,7 @@ export interface Problem {
   category?: ProblemCategory;   // undefined = "lld" (backwards compat)
   topic?: string;               // e.g. "OOP", "SOLID", "Patterns"
   free?: boolean;               // true = no paywall
+  tags?: string[];              // e.g. ["encapsulation","oop"] — used by Learn page
 }
 
 export interface Submission {

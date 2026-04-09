@@ -4,6 +4,7 @@ export const PROBLEMS: Problem[] = [
   // Beginner L1-L4
   {
     id: "parking-lot",
+    tags: ["lld","parking","state-machine","oop"],
     free: true,
     title: "Parking Lot System",
     difficulty: 2,
@@ -30,6 +31,7 @@ export const PROBLEMS: Problem[] = [
   },
   {
     id: "library-management",
+    tags: ["lld","relationships","oop"],
     title: "Library Management System",
     difficulty: 1,
     description:
@@ -55,6 +57,7 @@ export const PROBLEMS: Problem[] = [
   },
   {
     id: "atm-machine",
+    tags: ["lld","state-machine","encapsulation"],
     title: "ATM Machine",
     difficulty: 3,
     description:
@@ -80,6 +83,7 @@ export const PROBLEMS: Problem[] = [
   },
   {
     id: "tic-tac-toe",
+    tags: ["lld","oop","state-machine"],
     title: "Tic Tac Toe Game",
     difficulty: 1,
     description:
@@ -104,6 +108,7 @@ export const PROBLEMS: Problem[] = [
   },
   {
     id: "logger-system",
+    tags: ["lld","srp","solid","patterns"],
     title: "Logger / Logging Framework",
     difficulty: 2,
     description:
@@ -131,6 +136,7 @@ export const PROBLEMS: Problem[] = [
   // Intermediate L5-L8
   {
     id: "food-delivery",
+    tags: ["lld","observer","factory","patterns"],
     title: "Food Delivery System (Swiggy/Zomato)",
     difficulty: 5,
     description:
@@ -157,6 +163,7 @@ export const PROBLEMS: Problem[] = [
   },
   {
     id: "chat-application",
+    tags: ["lld","observer","patterns"],
     title: "Chat Application (WhatsApp-like)",
     difficulty: 5,
     description:
@@ -183,6 +190,7 @@ export const PROBLEMS: Problem[] = [
   },
   {
     id: "notification-system",
+    tags: ["lld","observer","factory","patterns"],
     title: "Notification System",
     difficulty: 4,
     description:
@@ -209,6 +217,7 @@ export const PROBLEMS: Problem[] = [
   },
   {
     id: "ride-sharing",
+    tags: ["lld","factory","state-machine"],
     title: "Ride Sharing System (Uber/Ola)",
     difficulty: 6,
     description:
@@ -236,6 +245,7 @@ export const PROBLEMS: Problem[] = [
   },
   {
     id: "cache-system",
+    tags: ["lld","singleton","patterns"],
     title: "LRU Cache System",
     difficulty: 4,
     description:
@@ -264,6 +274,7 @@ export const PROBLEMS: Problem[] = [
   // Advanced L7-L10
   {
     id: "elevator-system",
+    tags: ["lld","state-machine"],
     title: "Elevator System",
     difficulty: 7,
     description:
@@ -290,6 +301,7 @@ export const PROBLEMS: Problem[] = [
   },
   {
     id: "payment-gateway",
+    tags: ["lld","strategy","solid"],
     title: "Payment Gateway",
     difficulty: 8,
     description:
@@ -316,6 +328,7 @@ export const PROBLEMS: Problem[] = [
   },
   {
     id: "job-scheduler",
+    tags: ["lld","patterns"],
     title: "Distributed Job Scheduler",
     difficulty: 9,
     description:
@@ -343,6 +356,7 @@ export const PROBLEMS: Problem[] = [
   },
   {
     id: "movie-booking",
+    tags: ["lld","relationships"],
     title: "Movie Ticket Booking (BookMyShow)",
     difficulty: 6,
     description:
@@ -369,6 +383,7 @@ export const PROBLEMS: Problem[] = [
   },
   {
     id: "inventory-management",
+    tags: ["lld","relationships"],
     title: "Inventory Management System",
     difficulty: 5,
     description:
@@ -394,6 +409,7 @@ export const PROBLEMS: Problem[] = [
   },
   {
     id: "hotel-booking",
+    tags: ["lld","factory","state-machine"],
     title: "Hotel Booking System",
     difficulty: 6,
     description:
@@ -419,6 +435,7 @@ export const PROBLEMS: Problem[] = [
   },
   {
     id: "expense-splitter",
+    tags: ["lld","oop","relationships"],
     title: "Expense Splitter (Splitwise-like)",
     difficulty: 5,
     description:
@@ -444,6 +461,7 @@ export const PROBLEMS: Problem[] = [
   },
   {
     id: "social-media-feed",
+    tags: ["lld","observer","patterns"],
     title: "Social Media Feed (Twitter/Instagram)",
     difficulty: 7,
     description:
@@ -470,6 +488,7 @@ export const PROBLEMS: Problem[] = [
   },
   {
     id: "url-shortener",
+    tags: ["lld","oop"],
     title: "URL Shortener (bit.ly)",
     difficulty: 4,
     description:
@@ -496,6 +515,7 @@ export const PROBLEMS: Problem[] = [
   },
   {
     id: "rate-limiter",
+    tags: ["lld","patterns"],
     title: "Rate Limiter",
     difficulty: 7,
     description:
@@ -520,6 +540,7 @@ export const PROBLEMS: Problem[] = [
   },
   {
     id: "event-booking",
+    tags: ["lld","state-machine","factory"],
     title: "Event Ticketing System",
     difficulty: 8,
     description:

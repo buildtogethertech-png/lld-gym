@@ -7,6 +7,7 @@ export const FOUNDATION_PROBLEMS: Problem[] = [
   {
     id: "oop-encapsulation-car",
     free: true,
+    tags: ["encapsulation", "oop"],
     category: "foundation",
     topic: "OOP",
     title: "Encapsulation: Car – Engine – Wheel",
@@ -36,6 +37,7 @@ export const FOUNDATION_PROBLEMS: Problem[] = [
   {
     id: "oop-abstraction-bank",
     free: true,
+    tags: ["abstraction", "oop"],
     category: "foundation",
     topic: "OOP",
     title: "Abstraction: User – Account – Transaction",
@@ -64,6 +66,7 @@ export const FOUNDATION_PROBLEMS: Problem[] = [
   {
     id: "oop-inheritance-composition",
     free: true,
+    tags: ["inheritance", "composition", "oop"],
     category: "foundation",
     topic: "OOP",
     title: "Composition over Inheritance: Employee Roles",
@@ -92,6 +95,7 @@ export const FOUNDATION_PROBLEMS: Problem[] = [
   {
     id: "oop-polymorphism-payment",
     free: true,
+    tags: ["polymorphism", "oop"],
     category: "foundation",
     topic: "OOP",
     title: "Polymorphism: Payment System",
@@ -120,6 +124,7 @@ export const FOUNDATION_PROBLEMS: Problem[] = [
   {
     id: "oop-relationships-order",
     free: true,
+    tags: ["relationships", "oop"],
     category: "foundation",
     topic: "OOP",
     title: "Relationships: Order – Item – Payment",
@@ -152,6 +157,7 @@ export const FOUNDATION_PROBLEMS: Problem[] = [
   {
     id: "solid-srp-logger",
     free: true,
+    tags: ["srp", "solid"],
     category: "foundation",
     topic: "SOLID",
     title: "SRP: Fix the Overloaded Logger",
@@ -181,6 +187,7 @@ export const FOUNDATION_PROBLEMS: Problem[] = [
   {
     id: "solid-ocp-discounts",
     free: true,
+    tags: ["ocp", "solid"],
     category: "foundation",
     topic: "SOLID",
     title: "OCP: Extend Discounts Without Modifying",
@@ -207,6 +214,7 @@ export const FOUNDATION_PROBLEMS: Problem[] = [
 
   {
     id: "solid-lsp-shapes",
+    tags: ["lsp", "solid"],
     category: "foundation",
     topic: "SOLID",
     title: "LSP: The Square–Rectangle Problem",
@@ -233,6 +241,7 @@ export const FOUNDATION_PROBLEMS: Problem[] = [
 
   {
     id: "solid-isp-worker",
+    tags: ["isp", "solid"],
     category: "foundation",
     topic: "SOLID",
     title: "ISP: Break the Fat Worker Interface",
@@ -259,6 +268,7 @@ export const FOUNDATION_PROBLEMS: Problem[] = [
 
   {
     id: "solid-dip-database",
+    tags: ["dip", "solid"],
     category: "foundation",
     topic: "SOLID",
     title: "DIP: Decouple the Database Layer",
@@ -288,6 +298,7 @@ export const FOUNDATION_PROBLEMS: Problem[] = [
 
   {
     id: "pattern-factory-notifications",
+    tags: ["factory", "patterns"],
     category: "foundation",
     topic: "Design Patterns",
     title: "Factory Pattern: Notification Creator",
@@ -315,6 +326,7 @@ export const FOUNDATION_PROBLEMS: Problem[] = [
 
   {
     id: "pattern-builder-query",
+    tags: ["builder", "patterns"],
     category: "foundation",
     topic: "Design Patterns",
     title: "Builder Pattern: SQL Query Builder",
@@ -344,6 +356,7 @@ export const FOUNDATION_PROBLEMS: Problem[] = [
 
   {
     id: "pattern-singleton-config",
+    tags: ["singleton", "patterns"],
     category: "foundation",
     topic: "Design Patterns",
     title: "Singleton Pattern: Thread-Safe Config Manager",
@@ -371,6 +384,7 @@ export const FOUNDATION_PROBLEMS: Problem[] = [
 
   {
     id: "pattern-observer-stockprice",
+    tags: ["observer", "patterns"],
     category: "foundation",
     topic: "Design Patterns",
     title: "Observer Pattern: Stock Price Alerts",
@@ -397,6 +411,7 @@ export const FOUNDATION_PROBLEMS: Problem[] = [
 
   {
     id: "pattern-decorator-coffee",
+    tags: ["decorator", "patterns"],
     category: "foundation",
     topic: "Design Patterns",
     title: "Decorator Pattern: Coffee Customisation",

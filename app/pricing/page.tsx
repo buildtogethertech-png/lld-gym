@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import Link from "next/link";
 import UpgradeButton from "@/components/UpgradeButton";
 import { PLANS } from "@/lib/plans";
+import { PRICING_REVEALING_SOON } from "@/lib/pricing-visibility";
 
 const FREE_LIMIT = parseInt(process.env.NEXT_PUBLIC_FREE_PROBLEM_LIMIT ?? "5");
 
@@ -69,8 +70,13 @@ export default function PricingPage() {
       </div>
 
       <div className="text-center mb-10">
-        <h1 className="text-3xl font-bold mb-2">Unlock LLD Gym</h1>
+        <h1 className="text-3xl font-bold mb-2">Unlock LLD Hub</h1>
         <p className="text-gray-400">AI-powered evaluation. Real interview feedback. All problems.</p>
+        {PRICING_REVEALING_SOON && (
+          <div className="mt-5 mx-auto max-w-lg rounded-xl border border-yellow-400/30 bg-yellow-400/5 px-4 py-3 text-sm text-yellow-100/90">
+            Paid plan prices are <span className="font-semibold text-yellow-300">revealing soon</span> — we&apos;re finalizing tiers. Free problems stay available; check back shortly for checkout.
+          </div>
+        )}
         {planExpired && planExpiry && (
           <div className="mt-5 mx-auto max-w-md rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-100/95">
             Your access ended on{" "}
@@ -123,23 +129,46 @@ export default function PricingPage() {
               <p className={`text-xs font-semibold mb-1 ${isRecommended ? "text-yellow-400" : "text-gray-300"}`}>
                 {plan.label}
               </p>
-              <p className="text-2xl font-bold mb-0.5">₹{plan.price}</p>
-              <p className="text-xs text-gray-500 mb-4">{plan.perMonth}</p>
+              {PRICING_REVEALING_SOON ? (
+                <>
+                  <p className="text-xl font-bold mb-0.5 text-gray-200 tracking-tight">Revealing soon</p>
+                  <p className="text-xs text-gray-500 mb-4">Price coming shortly</p>
+                </>
+              ) : (
+                <>
+                  <p className="text-2xl font-bold mb-0.5">₹{plan.price}</p>
+                  <p className="text-xs text-gray-500 mb-4">{plan.perMonth}</p>
+                </>
+              )}
               <ul className="space-y-1.5 text-xs text-gray-300 mb-5 flex-1">
                 <li className="flex items-center gap-1.5"><span className="text-green-400">✓</span>All problems</li>
                 <li className="flex items-center gap-1.5"><span className="text-green-400">✓</span>AI evaluation</li>
                 <li className="flex items-center gap-1.5"><span className="text-green-400">✓</span>Score history</li>
                 <li className="flex items-center gap-1.5"><span className="text-green-400">✓</span>{plan.months}-month access</li>
               </ul>
-              <UpgradeButton
-                planId={plan.id}
-                label={`Get ${plan.label}`}
-                className={`w-full font-bold py-2 rounded-xl text-xs transition-all disabled:opacity-50 ${
-                  isRecommended
-                    ? "bg-yellow-400 hover:bg-yellow-300 text-black"
-                    : "bg-gray-700 hover:bg-gray-600 text-white"
-                }`}
-              />
+              {PRICING_REVEALING_SOON ? (
+                <button
+                  type="button"
+                  disabled
+                  className={`w-full font-bold py-2 rounded-xl text-xs cursor-not-allowed opacity-60 ${
+                    isRecommended
+                      ? "bg-yellow-400/40 text-black/80 border border-yellow-400/50"
+                      : "bg-gray-800 text-gray-500 border border-gray-700"
+                  }`}
+                >
+                  Pay — revealing soon
+                </button>
+              ) : (
+                <UpgradeButton
+                  planId={plan.id}
+                  label={`Get ${plan.label}`}
+                  className={`w-full font-bold py-2 rounded-xl text-xs transition-all disabled:opacity-50 ${
+                    isRecommended
+                      ? "bg-yellow-400 hover:bg-yellow-300 text-black"
+                      : "bg-gray-700 hover:bg-gray-600 text-white"
+                  }`}
+                />
+              )}
             </div>
           );
         })}

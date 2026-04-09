@@ -13,12 +13,15 @@ export default function NavBar() {
       <div className="w-full h-14 flex items-center justify-between px-3 sm:px-4 lg:px-5">
         <Link href="/" className="flex items-center gap-2 font-bold text-lg tracking-tight">
           <span className="text-yellow-400">⚡</span>
-          <span>LLD Gym</span>
+          <span>LLD Hub</span>
         </Link>
 
         <div className="flex items-center gap-3">
           <Link href="/" className="text-sm text-gray-400 hover:text-gray-200 transition-colors hidden sm:block">
             Problems
+          </Link>
+          <Link href="/learn" className="text-sm text-gray-400 hover:text-gray-200 transition-colors hidden sm:block">
+            Learn
           </Link>
           {session && (
             <Link
@@ -28,9 +31,6 @@ export default function NavBar() {
               Submissions
             </Link>
           )}
-          <Link href="/learn" className="text-sm text-gray-400 hover:text-gray-200 transition-colors hidden sm:block">
-            Learn
-          </Link>
           <Link href="/pricing" className="text-sm text-yellow-400 hover:text-yellow-300 transition-colors hidden sm:block font-medium">
             Pricing
           </Link>

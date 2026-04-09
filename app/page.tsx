@@ -74,7 +74,7 @@ export default function HomePage() {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight mb-2">
-          LLD Gym <span className="text-yellow-400">⚡</span>
+          LLD Hub <span className="text-yellow-400">⚡</span>
         </h1>
         <p className="text-gray-400 max-w-xl">
           {session

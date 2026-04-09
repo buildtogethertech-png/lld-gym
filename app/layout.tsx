@@ -4,8 +4,8 @@ import Providers from "@/components/Providers";
 import NavBar from "@/components/NavBar";
 
 export const metadata: Metadata = {
-  title: "LLD Gym — Master Low-Level Design",
-  description: "Practice 20+ LLD problems with AI-powered evaluation. Build real design thinking.",
+  title: "LLD Hub — Master Low-Level Design",
+  description: "Practice LLD problems with AI-powered evaluation. Build real design thinking.",
 };
 
 export default function RootLayout({

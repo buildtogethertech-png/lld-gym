@@ -3,7 +3,9 @@
 import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { PLAN_MAP } from "@/lib/plans";
+import { PRICING_REVEALING_SOON } from "@/lib/pricing-visibility";
 
 declare global {
   interface Window {
@@ -55,6 +57,23 @@ export default function UpgradeButton({ className, label, planId = "twelvemonth"
   const plan = PLAN_MAP[planId];
   const defaultLabel = plan ? `Get ${plan.label} — ₹${plan.price}` : "Unlock Access";
 
+  if (PRICING_REVEALING_SOON) {
+    return (
+      <div className="flex flex-col gap-2 w-full">
+        <button
+          type="button"
+          disabled
+          className={`${className ?? "w-full bg-yellow-400/30 text-black/80 font-bold py-3 rounded-xl text-sm border border-yellow-400/40"} cursor-not-allowed opacity-80`}
+        >
+          {label ?? "Price revealing soon"}
+        </button>
+        <Link href="/pricing" className="text-center text-xs text-yellow-400/90 hover:text-yellow-300 transition-colors">
+          See pricing →
+        </Link>
+      </div>
+    );
+  }
+
   async function handlePayment() {
     if (!session) { router.push("/login"); return; }
     setLoading(true);
@@ -85,7 +104,7 @@ export default function UpgradeButton({ className, label, planId = "twelvemonth"
       key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
       amount,
       currency,
-      name: "LLD Gym",
+      name: "LLD Hub",
       description: plan?.label ?? "Access",
       order_id: orderId,
       prefill: { name: session.user?.name ?? "", email: session.user?.email ?? "" },
