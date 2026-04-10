@@ -11,6 +11,7 @@ CREATE TABLE "public"."payments" (
     "planConfigId"      TEXT NOT NULL,
     "razorpayOrderId"   TEXT NOT NULL,
     "razorpayPaymentId" TEXT NOT NULL,
+    "invoiceId"         TEXT,
     "amountInr"         INTEGER NOT NULL,
     "paidAt"            TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -19,6 +20,7 @@ CREATE TABLE "public"."payments" (
 
 CREATE UNIQUE INDEX "payments_razorpayOrderId_key"   ON "public"."payments"("razorpayOrderId");
 CREATE UNIQUE INDEX "payments_razorpayPaymentId_key" ON "public"."payments"("razorpayPaymentId");
+CREATE UNIQUE INDEX "payments_invoiceId_key" ON "public"."payments"("invoiceId");
 
 ALTER TABLE "public"."payments"
     ADD CONSTRAINT "payments_userId_fkey"
