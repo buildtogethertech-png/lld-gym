@@ -8,6 +8,8 @@ export async function notifyPurchaseReceipt(params: {
   amountInr: number;
   razorpayOrderId: string;
   razorpayPaymentId: string;
+  /** Must match `Payment.invoiceId` (saved at create time). */
+  invoiceId: string;
   paidAt?: Date;
 }) {
   try {
@@ -24,6 +26,7 @@ export async function notifyPurchaseReceipt(params: {
       customerName: user.name,
       planName: params.planName,
       amountInr: params.amountInr,
+      invoiceId: params.invoiceId,
       razorpayPaymentId: params.razorpayPaymentId,
       razorpayOrderId: params.razorpayOrderId,
       paidAt: params.paidAt ?? new Date(),

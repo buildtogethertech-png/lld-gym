@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { PLAN_MAP, getPlanExpiry } from "@/lib/plans";
 import { invalidatePlanCache } from "@/lib/plan-config";
 import { notifyPurchaseReceipt } from "@/lib/purchase-receipt-email";
+import { paymentInvoiceId } from "@/lib/payment-invoice-id";
 import crypto from "crypto";
 
 /** Prisma + Node crypto; avoid Edge. */
@@ -103,12 +104,14 @@ export async function POST(req: NextRequest) {
         data: { isPaid: true, planExpiry, planId: planConfig.id },
       });
 
+      const invoiceId = paymentInvoiceId(razorpayPaymentId);
       await prisma.payment.create({
         data: {
           userId: order.userId,
           planConfigId: planConfig.id,
           razorpayOrderId,
           razorpayPaymentId,
+          invoiceId,
           amountInr: order.amountInr,
         },
       });
@@ -117,6 +120,7 @@ export async function POST(req: NextRequest) {
         userId: order.userId,
         planName: planConfig.name,
         amountInr: order.amountInr,
+        invoiceId,
         razorpayOrderId,
         razorpayPaymentId,
       });

@@ -22,7 +22,6 @@ function getResend(): Resend | null {
  *    https://resend.com/domains (e.g. only `support.lldhub.in` verified → use `noreply@support.lldhub.in`, not `@lldhub.in`).
  *    Optional: `EMAIL_REPLY_TO` so “Reply” goes to your real inbox (e.g. support@lldhub.in).
  * 2) **SMTP** — `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`, optional `SMTP_PORT` / `SMTP_SECURE`.
- * 3) **Gmail** — `GMAIL_USER` + `GMAIL_APP_PASSWORD`.
  */
 function getSmtpTransporter(): Transporter | null {
   if (smtpCached !== undefined) return smtpCached;
@@ -46,16 +45,6 @@ function getSmtpTransporter(): Transporter | null {
     return smtpCached;
   }
 
-  const gUser = process.env.GMAIL_USER?.trim();
-  const gPass = process.env.GMAIL_APP_PASSWORD?.trim();
-  if (gUser && gPass) {
-    smtpCached = nodemailer.createTransport({
-      service: "gmail",
-      auth: { user: gUser, pass: gPass },
-    });
-    return smtpCached;
-  }
-
   smtpCached = null;
   return null;
 }
@@ -63,8 +52,6 @@ function getSmtpTransporter(): Transporter | null {
 function resolveFrom(displayName: string): string | null {
   const explicit = process.env.EMAIL_FROM?.trim();
   if (explicit) return explicit;
-  const g = process.env.GMAIL_USER?.trim();
-  if (g) return `"${displayName}" <${g}>`;
   const u = process.env.SMTP_USER?.trim();
   if (u) return `"${displayName}" <${u}>`;
   return null;
@@ -85,7 +72,7 @@ async function sendHtmlMail(opts: {
   const from = resolveFrom(opts.fromDisplayName);
   if (!from) {
     if (!opts.quietIfUnconfigured) {
-      console.warn("[mailer] skipped — set EMAIL_FROM (required for Resend) or GMAIL_USER / SMTP_USER");
+      console.warn("[mailer] skipped — set EMAIL_FROM (required for Resend) or SMTP_USER with SMTP");
     }
     return;
   }
@@ -114,7 +101,7 @@ async function sendHtmlMail(opts: {
   const tx = getSmtpTransporter();
   if (!tx) {
     if (!opts.quietIfUnconfigured) {
-      console.warn("[mailer] skipped — set RESEND_API_KEY or SMTP_* / Gmail");
+      console.warn("[mailer] skipped — set RESEND_API_KEY or SMTP_*");
     }
     return;
   }
@@ -129,7 +116,7 @@ async function sendHtmlMail(opts: {
 }
 
 export async function sendAdminMail(subject: string, html: string) {
-  const to = process.env.ADMIN_NOTIFY_EMAIL?.trim() || "gauravmandal650@gmail.com";
+  const to = process.env.ADMIN_NOTIFY_EMAIL?.trim() || FEEDBACK_INBOX;
   await sendHtmlMail({ to, subject, html, fromDisplayName: "LLD Hub" });
 }
 
@@ -147,6 +134,8 @@ export type PurchaseReceiptPayload = {
   customerName: string | null;
   planName: string;
   amountInr: number;
+  /** Same as DB `Payment.invoiceId`. */
+  invoiceId: string;
   razorpayPaymentId: string;
   razorpayOrderId: string;
   paidAt: Date;
@@ -156,7 +145,7 @@ export type PurchaseReceiptPayload = {
 export async function sendPurchaseReceiptEmail(p: PurchaseReceiptPayload) {
   const name = p.customerName?.trim() || "there";
   const rupees = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(p.amountInr);
-  const invoiceId = `INV-${p.razorpayPaymentId.replace(/[^a-zA-Z0-9]/g, "").slice(-10).toUpperCase()}`;
+  const invoiceId = p.invoiceId;
   const dateStr = p.paidAt.toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" });
 
   const html = `

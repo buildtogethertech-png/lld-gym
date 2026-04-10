@@ -67,6 +67,8 @@ model Payment {
   planConfigId        String
   razorpayOrderId     String   @unique
   razorpayPaymentId   String   @unique
+  /** Same as receipt email when set; null for rows created before this column existed */
+  invoiceId           String?  @unique
   amountInr           Int
   paidAt              DateTime @default(now())
 

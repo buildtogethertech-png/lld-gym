@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { PLAN_MAP, getPlanExpiry } from "@/lib/plans";
 import { invalidatePlanCache } from "@/lib/plan-config";
 import { notifyPurchaseReceipt } from "@/lib/purchase-receipt-email";
+import { paymentInvoiceId } from "@/lib/payment-invoice-id";
 import crypto from "crypto";
 
 export async function POST(req: NextRequest) {
@@ -84,12 +85,14 @@ export async function POST(req: NextRequest) {
 
     // Insert payment record (full history, never overwritten)
     const amountInr = planConfig.priceInr ?? plan.price;
+    const invoiceId = paymentInvoiceId(razorpay_payment_id);
     await prisma.payment.create({
       data: {
         userId:             uid,
         planConfigId:       planConfig.id,
         razorpayOrderId:    razorpay_order_id,
         razorpayPaymentId:  razorpay_payment_id,
+        invoiceId,
         amountInr,
       },
     });
@@ -104,6 +107,7 @@ export async function POST(req: NextRequest) {
           payload: JSON.stringify({
             razorpay_order_id,
             razorpay_payment_id,
+            invoiceId,
             planSlug,
             userId: uid,
             amountInr,
@@ -118,6 +122,7 @@ export async function POST(req: NextRequest) {
       userId: uid,
       planName: planConfig.name,
       amountInr,
+      invoiceId,
       razorpayOrderId: razorpay_order_id,
       razorpayPaymentId: razorpay_payment_id,
     });
