@@ -98,10 +98,22 @@ export default function UpgradeButton({ className, label, planId = "twelvemonth"
       setLoading(false);
       return;
     }
-    const { orderId, amount, currency } = await orderRes.json();
+    const orderJson = (await orderRes.json()) as {
+      orderId?: string;
+      amount?: number;
+      currency?: string;
+      keyId?: string;
+      error?: string;
+    };
+    const { orderId, amount, currency, keyId } = orderJson;
+    if (!keyId || !orderId || amount == null || !currency) {
+      alert(orderJson.error ?? "Payment gateway misconfigured");
+      setLoading(false);
+      return;
+    }
 
     const rzp = new window.Razorpay({
-      key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
+      key: keyId,
       amount,
       currency,
       name: "LLD Hub",

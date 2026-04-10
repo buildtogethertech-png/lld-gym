@@ -4,12 +4,14 @@ import { prisma } from "@/lib/prisma";
 import { PLAN_MAP } from "@/lib/plans";
 import Razorpay from "razorpay";
 
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID!,
-  key_secret: process.env.RAZORPAY_KEY_SECRET!,
-});
-
 export async function POST(req: NextRequest) {
+  const keyId = process.env.RAZORPAY_KEY_ID?.trim();
+  const keySecret = process.env.RAZORPAY_KEY_SECRET?.trim();
+  if (!keyId || !keySecret) {
+    console.error("[payment/create-order] RAZORPAY_KEY_ID or RAZORPAY_KEY_SECRET missing");
+    return NextResponse.json({ error: "Payment gateway misconfigured" }, { status: 500 });
+  }
+
   const uid = await getUid();
   if (!uid) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -22,6 +24,8 @@ export async function POST(req: NextRequest) {
     select: { email: true },
   });
 
+  const razorpay = new Razorpay({ key_id: keyId, key_secret: keySecret });
+
   const order = await razorpay.orders.create({
     amount: plan.amountPaise,
     currency: "INR",
@@ -29,15 +33,20 @@ export async function POST(req: NextRequest) {
     notes: { userId: uid, email: user?.email ?? "", plan: planId },
   });
 
-  // Store order → user/plan mapping so webhook can identify without relying on Razorpay notes
   await prisma.razorpayOrder.create({
     data: {
       razorpayId: order.id,
-      userId:     uid,
-      planSlug:   `plan_${planId}`,
-      amountInr:  plan.price,
+      userId: uid,
+      planSlug: `plan_${planId}`,
+      amountInr: plan.price,
     },
   });
 
-  return NextResponse.json({ orderId: order.id, amount: plan.amountPaise, currency: "INR", plan: planId });
+  return NextResponse.json({
+    orderId: order.id,
+    amount: plan.amountPaise,
+    currency: "INR",
+    plan: planId,
+    keyId,
+  });
 }

@@ -37,7 +37,7 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
    - `NEXTAUTH_URL` — your live site URL, e.g. `https://your-app.vercel.app` (must match the URL users open).
    - `NEXTAUTH_SECRET` — long random string (e.g. `openssl rand -base64 32`).
    - Google OAuth: add the production **Authorized redirect URI** `https://<your-domain>/api/auth/callback/google`.
-   - Razorpay: same **test or live** key pair for `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, and `NEXT_PUBLIC_RAZORPAY_KEY_ID`.
+   - Razorpay: `RAZORPAY_KEY_ID` and `RAZORPAY_KEY_SECRET` only. The checkout script gets the key id from the create-order API response. Optional: `RAZORPAY_WEBHOOK_SECRET` for webhooks.
 3. **Database (greenfield)** — schema lives only in `prisma/schema.prisma`. With `DATABASE_URL` pointing at the target DB (local or hosted), run once:
    ```bash
    npm run db:push
