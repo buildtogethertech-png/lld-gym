@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { PLAN_MAP, getPlanExpiry } from "@/lib/plans";
+import { getPlanExpiry } from "@/lib/plans";
 import { invalidatePlanCache } from "@/lib/plan-config";
 import { notifyPurchaseReceipt } from "@/lib/purchase-receipt-email";
 import { paymentInvoiceId } from "@/lib/payment-invoice-id";
@@ -10,7 +10,7 @@ import crypto from "crypto";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/** Razorpay / browsers may probe the URL; 200 helps dashboard “reachable” checks. */
+/** Razorpay / browsers may probe the URL; 200 helps dashboard "reachable" checks. */
 export async function GET() {
   const secret = process.env.RAZORPAY_WEBHOOK_SECRET?.trim() ?? "";
   return NextResponse.json({
@@ -28,21 +28,20 @@ export async function HEAD() {
 }
 
 export async function POST(req: NextRequest) {
-  const rawBody = await req.text();
+  const rawBody  = await req.text();
   const signature = req.headers.get("x-razorpay-signature") ?? "";
-  const secret = process.env.RAZORPAY_WEBHOOK_SECRET?.trim() ?? "";
+  const secret    = process.env.RAZORPAY_WEBHOOK_SECRET?.trim() ?? "";
 
   console.info("[webhook] POST", rawBody.length, "bytes", { hasSignature: Boolean(signature) });
 
-  // Verify signature (raw body must match what Razorpay signed)
   const expectedHex = crypto.createHmac("sha256", secret).update(rawBody).digest("hex");
-  const sigValid = secret.length > 0 && expectedHex === signature;
+  const sigValid    = secret.length > 0 && expectedHex === signature;
 
   let payload: Record<string, unknown> = {};
   let event: string | undefined;
   try {
     payload = JSON.parse(rawBody);
-    event = payload.event as string | undefined;
+    event   = payload.event as string | undefined;
   } catch {
     // malformed body — still log it
   }
@@ -57,17 +56,17 @@ export async function POST(req: NextRequest) {
   }
 
   if (!sigValid) {
-    console.warn("[webhook] invalid signature — logged but not processed (check RAZORPAY_WEBHOOK_SECRET vs dashboard)");
+    console.warn("[webhook] invalid signature — logged but not processed");
     return NextResponse.json({ received: true, processed: false });
   }
 
   if (event === "payment.captured") {
     try {
       const paymentEntity = (payload.payload as Record<string, unknown>)?.payment as Record<string, unknown> | undefined;
-      const entity = paymentEntity?.entity as Record<string, unknown> | undefined;
+      const entity        = paymentEntity?.entity as Record<string, unknown> | undefined;
 
       const razorpayPaymentId = entity?.id as string | undefined;
-      const razorpayOrderId = entity?.order_id as string | undefined;
+      const razorpayOrderId   = entity?.order_id as string | undefined;
 
       if (!razorpayOrderId || !razorpayPaymentId) {
         console.error("[webhook] payment.captured missing order_id or payment id");
@@ -85,6 +84,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ received: true, processed: false, reason: "order not found" });
       }
 
+      // All plan config comes from DB — no hardcoded PLAN_MAP
       const planConfig =
         (await prisma.planConfig.findUnique({ where: { slug: order.planSlug } })) ??
         (await prisma.planConfig.findUnique({ where: { slug: "paid" } }));
@@ -93,9 +93,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ received: true, processed: false });
       }
 
-      const planKey = order.planSlug.replace("plan_", "");
-      const plan = PLAN_MAP[planKey];
-      const planExpiry = plan ? getPlanExpiry(plan) : null;
+      const planExpiry = planConfig.months ? getPlanExpiry(planConfig.months) : null;
 
       invalidatePlanCache();
 
@@ -107,19 +105,19 @@ export async function POST(req: NextRequest) {
       const invoiceId = paymentInvoiceId(razorpayPaymentId);
       await prisma.payment.create({
         data: {
-          userId: order.userId,
-          planConfigId: planConfig.id,
+          userId:            order.userId,
+          planConfigId:      planConfig.id,
           razorpayOrderId,
           razorpayPaymentId,
           invoiceId,
-          amountInr: order.amountInr,
+          amountInr:         order.amountInr,
         },
       });
 
       void notifyPurchaseReceipt({
-        userId: order.userId,
-        planName: planConfig.name,
-        amountInr: order.amountInr,
+        userId:            order.userId,
+        planName:          planConfig.name,
+        amountInr:         order.amountInr,
         invoiceId,
         razorpayOrderId,
         razorpayPaymentId,

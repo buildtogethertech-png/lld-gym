@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUid } from "@/lib/get-uid";
 import { prisma } from "@/lib/prisma";
-import { PLAN_MAP, getPlanExpiry } from "@/lib/plans";
+import { getPlanExpiry } from "@/lib/plans";
 import { invalidatePlanCache } from "@/lib/plan-config";
 import { notifyPurchaseReceipt } from "@/lib/purchase-receipt-email";
 import { paymentInvoiceId } from "@/lib/payment-invoice-id";
@@ -33,7 +33,8 @@ export async function POST(req: NextRequest) {
     const razorpay_order_id   = body.razorpay_order_id   as string | undefined;
     const razorpay_payment_id = body.razorpay_payment_id as string | undefined;
     const razorpay_signature  = body.razorpay_signature  as string | undefined;
-    const planSlug            = (body.plan as string | undefined) ?? "plan_twelvemonth";
+    const planSlugRaw         = (body.plan as string | undefined) ?? "plan_twelvemonth";
+    const planSlug            = planSlugRaw.startsWith("plan_") ? planSlugRaw : `plan_${planSlugRaw}`;
 
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
       return NextResponse.json(
@@ -62,49 +63,41 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true, alreadyProcessed: true });
     }
 
-    // Lookup plan from PLAN_MAP (for expiry calc) + PlanConfig (for planId FK)
-    const plan = PLAN_MAP[planSlug.replace("plan_", "")];
-    if (!plan) return NextResponse.json({ error: "Invalid plan." }, { status: 400 });
-
-    const planExpiry   = getPlanExpiry(plan);
-    const planConfig   = await prisma.planConfig.findUnique({ where: { slug: planSlug } })
-                      ?? await prisma.planConfig.findUnique({ where: { slug: "paid" } });
+    // All plan config comes from DB — no hardcoded PLAN_MAP
+    const planConfig = await prisma.planConfig.findUnique({ where: { slug: planSlug } })
+                    ?? await prisma.planConfig.findUnique({ where: { slug: "paid" } });
     if (!planConfig) return NextResponse.json({ error: "Plan config not found." }, { status: 500 });
+    if (!planConfig.months) return NextResponse.json({ error: "Plan has no duration configured." }, { status: 500 });
+
+    const planExpiry = getPlanExpiry(planConfig.months);
+    const amountInr  = planConfig.priceInr ?? 0;
 
     invalidatePlanCache();
 
-    // Update user access
     await prisma.user.update({
       where: { id: uid },
-      data: {
-        isPaid:    true,
-        planExpiry,
-        planId:    planConfig.id,
-      },
+      data: { isPaid: true, planExpiry, planId: planConfig.id },
     });
 
-    // Insert payment record (full history, never overwritten)
-    const amountInr = planConfig.priceInr ?? plan.price;
     const invoiceId = paymentInvoiceId(razorpay_payment_id);
     await prisma.payment.create({
       data: {
-        userId:             uid,
-        planConfigId:       planConfig.id,
-        razorpayOrderId:    razorpay_order_id,
-        razorpayPaymentId:  razorpay_payment_id,
+        userId:            uid,
+        planConfigId:      planConfig.id,
+        razorpayOrderId:   razorpay_order_id,
+        razorpayPaymentId: razorpay_payment_id,
         invoiceId,
         amountInr,
       },
     });
 
-    // Same table as Razorpay POST webhooks — checkout path never hits /api/payment/webhook unless you expose a public URL there.
     try {
       await prisma.webhookLog.create({
         data: {
-          source: "checkout_verify",
-          event: "payment.verified",
+          source:   "checkout_verify",
+          event:    "payment.verified",
           sigValid: true,
-          payload: JSON.stringify({
+          payload:  JSON.stringify({
             razorpay_order_id,
             razorpay_payment_id,
             invoiceId,
@@ -119,11 +112,11 @@ export async function POST(req: NextRequest) {
     }
 
     void notifyPurchaseReceipt({
-      userId: uid,
-      planName: planConfig.name,
+      userId:            uid,
+      planName:          planConfig.name,
       amountInr,
       invoiceId,
-      razorpayOrderId: razorpay_order_id,
+      razorpayOrderId:   razorpay_order_id,
       razorpayPaymentId: razorpay_payment_id,
     });
 

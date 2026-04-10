@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { PLAN_MAP } from "@/lib/plans";
 import { PRICING_REVEALING_SOON } from "@/lib/pricing-visibility";
 
 declare global {
@@ -45,7 +44,7 @@ interface RazorpayInstance { open(): void; }
 interface Props {
   className?: string;
   label?: string;
-  planId?: string;  // any key from PLAN_MAP e.g. "onemonth" | "threemonth" | "twelvemonth"
+  planId?: string;  // plan slug id e.g. "onemonth" | "threemonth" | "twelvemonth"
   onSuccess?: () => void;
 }
 
@@ -53,26 +52,6 @@ export default function UpgradeButton({ className, label, planId = "twelvemonth"
   const { data: session } = useSession();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-
-  const plan = PLAN_MAP[planId];
-  const defaultLabel = plan ? `Get ${plan.label} — ₹${plan.price}` : "Unlock Access";
-
-  if (PRICING_REVEALING_SOON) {
-    return (
-      <div className="flex flex-col gap-2 w-full">
-        <button
-          type="button"
-          disabled
-          className={`${className ?? "w-full bg-yellow-400/30 text-black/80 font-bold py-3 rounded-xl text-sm border border-yellow-400/40"} cursor-not-allowed opacity-80`}
-        >
-          {label ?? "Price revealing soon"}
-        </button>
-        <Link href="/pricing" className="text-center text-xs text-yellow-400/90 hover:text-yellow-300 transition-colors">
-          See pricing →
-        </Link>
-      </div>
-    );
-  }
 
   async function handlePayment() {
     if (!session) { router.push("/login"); return; }
@@ -103,9 +82,10 @@ export default function UpgradeButton({ className, label, planId = "twelvemonth"
       amount?: number;
       currency?: string;
       keyId?: string;
+      planName?: string;
       error?: string;
     };
-    const { orderId, amount, currency, keyId } = orderJson;
+    const { orderId, amount, currency, keyId, planName } = orderJson;
     if (!keyId || !orderId || amount == null || !currency) {
       alert(orderJson.error ?? "Payment gateway misconfigured");
       setLoading(false);
@@ -117,7 +97,7 @@ export default function UpgradeButton({ className, label, planId = "twelvemonth"
       amount,
       currency,
       name: "LLD Hub",
-      description: plan?.label ?? "Access",
+      description: planName ?? "Access",
       order_id: orderId,
       prefill: { name: session.user?.name ?? "", email: session.user?.email ?? "" },
       theme: { color: "#FACC15" },
@@ -171,7 +151,7 @@ export default function UpgradeButton({ className, label, planId = "twelvemonth"
       disabled={loading}
       className={className ?? "w-full bg-yellow-400 hover:bg-yellow-300 disabled:opacity-50 text-black font-bold py-3 rounded-xl text-sm transition-all"}
     >
-      {loading ? "Loading…" : (label ?? defaultLabel)}
+      {loading ? "Loading…" : (label ?? "Unlock Access")}
     </button>
   );
 }

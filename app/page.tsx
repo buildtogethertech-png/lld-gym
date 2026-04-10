@@ -19,6 +19,7 @@ export default function HomePage() {
   const { data: session, status } = useSession();
   const [submissions, setSubmissions] = useState<SubmissionMap>({});
   const [isPaid, setIsPaid] = useState(false);
+  const [planBadge, setPlanBadge] = useState<string | null>(null);
 
   const ALL_PROBLEMS = [...FOUNDATION_PROBLEMS, ...PROBLEMS];
 
@@ -53,7 +54,10 @@ export default function HomePage() {
     if (session) {
       fetch("/api/user/me", { cache: "no-store" })
         .then((r) => r.json())
-        .then((d) => setIsPaid(d.isPaid ?? false));
+        .then((d) => {
+          setIsPaid(d.isPaid ?? false);
+          setPlanBadge(d.planBadge ?? null);
+        });
     }
   }, [session]);
 
@@ -73,9 +77,20 @@ export default function HomePage() {
     <div>
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight mb-2">
-          LLD Hub <span className="text-yellow-400">⚡</span>
-        </h1>
+        <div className="flex items-center gap-3 mb-2">
+          <h1 className="text-3xl font-bold tracking-tight">
+            LLD Hub <span className="text-yellow-400">⚡</span>
+          </h1>
+          {planBadge && (
+            <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${
+              planBadge === "FREE"
+                ? "border-gray-700 text-gray-500 bg-gray-900"
+                : "border-yellow-400/50 text-yellow-300 bg-yellow-400/10"
+            }`}>
+              {planBadge}
+            </span>
+          )}
+        </div>
         <p className="text-gray-400 max-w-xl">
           {session
             ? `Welcome back, ${session.user?.name ?? session.user?.email?.split("@")[0]}. Keep pushing.`

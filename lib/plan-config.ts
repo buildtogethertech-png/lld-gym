@@ -1,7 +1,7 @@
 import { prisma } from "./prisma";
 import type { PlanConfig } from "@prisma/client";
 
-// ── Defaults used only if DB rows are missing (safety fallback) ───────────────
+// ── Defaults if DB rows are missing ───────────────────────────────────────────
 const FREE_FALLBACK: Omit<PlanConfig, "id" | "updatedAt"> = {
   slug: "free",
   name: "Free",
@@ -12,6 +12,8 @@ const FREE_FALLBACK: Omit<PlanConfig, "id" | "updatedAt"> = {
   umlDiagrams: 2,
   noteMaxLength: 8000,
   problemsCount: 5,
+  features: [],
+  badge: "FREE",
   priceInr: null,
   months: null,
   tag: null,
@@ -28,13 +30,14 @@ const PAID_FALLBACK: Omit<PlanConfig, "id" | "updatedAt"> = {
   umlDiagrams: 100,
   noteMaxLength: 8000,
   problemsCount: null,
+  features: [],
+  badge: "PRO",
   priceInr: 499,
   months: 3,
   tag: "RECOMMENDED",
   active: true,
 };
 
-// ── Cache in module scope (process lifetime) to avoid repeated DB hits ────────
 let _free: PlanConfig | null = null;
 let _paid: PlanConfig | null = null;
 
@@ -53,8 +56,7 @@ export async function getPaidPlan(): Promise<PlanConfig> {
 }
 
 /**
- * Returns the effective plan for a user.
- * If planExpiry is in the past, treat as free regardless of planId.
+ * Effective plan for a user. If paid access has expired, treat as free.
  */
 export async function getEffectivePlan(user: {
   planId: string | null;
@@ -68,15 +70,12 @@ export async function getEffectivePlan(user: {
 
   if (!isPlanActive) return getFreePlan();
 
-  // Try to load by planId directly
   const plan = await prisma.planConfig.findUnique({ where: { id: user.planId! } });
   if (plan) return plan;
 
-  // planId set but row missing → fall back to slug-based lookup
   return getPaidPlan();
 }
 
-/** Invalidate module-level cache (call after seeding or plan updates). */
 export function invalidatePlanCache() {
   _free = null;
   _paid = null;

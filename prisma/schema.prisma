@@ -24,6 +24,13 @@ model PlanConfig {
   noteMaxLength Int
   problemsCount Int?          // null = unlimited
 
+  // Features — array of feature keys (e.g. ["all_problems","ai_eval","score_history"])
+  // Keys map to human-readable labels via FEATURE_LABELS in lib/plans.ts
+  features      String[]      @default([])
+
+  // Short badge label shown on the problems page for users on this plan (e.g. "PRO", "FREE")
+  badge         String?
+
   // Pricing (null for free/paid base plans)
   priceInr      Int?
   months        Int?          // null = free, 0 = lifetime

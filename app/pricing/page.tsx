@@ -4,10 +4,22 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import UpgradeButton from "@/components/UpgradeButton";
-import { PLANS } from "@/lib/plans";
 import { PRICING_REVEALING_SOON } from "@/lib/pricing-visibility";
 
-const FREE_LIMIT = parseInt(process.env.NEXT_PUBLIC_FREE_PROBLEM_LIMIT ?? "5");
+interface PlanData {
+  id: string;
+  slug: string;
+  name: string;
+  priceInr: number | null;
+  months: number | null;
+  tag: string | null;
+  features: string[];
+  featureLabels: string[];
+}
+
+interface PlansResponse {
+  plans: PlanData[];
+}
 
 export default function PricingPage() {
   const { data: session } = useSession();
@@ -15,6 +27,15 @@ export default function PricingPage() {
   const [planExpired, setPlanExpired] = useState(false);
   const [planName, setPlanName] = useState<string | null>(null);
   const [planExpiry, setPlanExpiry] = useState<string | null>(null);
+  const [plansData, setPlansData] = useState<PlansResponse | null>(null);
+
+  // Fetch plan configs (features, prices) — no auth required
+  useEffect(() => {
+    fetch("/api/plans")
+      .then((r) => r.json())
+      .then((d: PlansResponse) => setPlansData(d))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (session) {
@@ -26,8 +47,6 @@ export default function PricingPage() {
           setPlanName(d.planName ?? null);
           setPlanExpiry(d.planExpiry ?? null);
         });
-    } else {
-      setPlanExpired(false);
     }
   }, [session]);
 
@@ -57,8 +76,10 @@ export default function PricingPage() {
     );
   }
 
+  const plans = plansData?.plans ?? [];
+
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-4xl mx-auto">
       <div className="mb-6">
         <Link href="/" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-300 transition-colors">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -71,11 +92,6 @@ export default function PricingPage() {
       <div className="text-center mb-10">
         <h1 className="text-3xl font-bold mb-2">Unlock LLD Hub</h1>
         <p className="text-gray-400">AI-powered evaluation. Real interview feedback. All problems.</p>
-        {PRICING_REVEALING_SOON && (
-          <div className="mt-5 mx-auto max-w-lg rounded-xl border border-yellow-400/30 bg-yellow-400/5 px-4 py-3 text-sm text-yellow-100/90">
-            Paid plan prices are <span className="font-semibold text-yellow-300">revealing soon</span> — we&apos;re finalizing tiers. Free problems stay available; check back shortly for checkout.
-          </div>
-        )}
         {planExpired && planExpiry && (
           <div className="mt-5 mx-auto max-w-md rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-100/95">
             Your access ended on{" "}
@@ -90,34 +106,37 @@ export default function PricingPage() {
       </div>
 
       {/* Free + paid plans side by side */}
-      <div className="grid grid-cols-4 gap-3 mb-8">
-
-        {/* Free tier */}
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-          <p className="text-xs font-semibold text-gray-500 mb-1">Free</p>
-          <p className="text-2xl font-bold mb-0.5">₹0</p>
-          <p className="text-xs text-gray-600 mb-4">forever</p>
-          <ul className="space-y-1.5 text-xs text-gray-500 mb-5">
-            <li className="flex items-center gap-1.5"><span className="text-green-400">✓</span>{FREE_LIMIT} problems</li>
-            <li className="flex items-center gap-1.5"><span className="text-red-500">✗</span>AI evaluation</li>
-            <li className="flex items-center gap-1.5"><span className="text-red-500">✗</span>All problems</li>
-            <li className="flex items-center gap-1.5"><span className="text-red-500">✗</span>Score history</li>
-          </ul>
-          <div className="w-full text-center text-xs text-gray-600 py-2 border border-gray-800 rounded-lg">
-            Current plan
-          </div>
-        </div>
-
-        {/* Paid plans — driven by PLANS config */}
-        {PLANS.map((plan) => {
+      {/* Free gets 0.75fr, each paid plan gets 1fr */}
+      <div
+        className="grid gap-4 mb-8 items-start"
+        style={{
+          gridTemplateColumns: plans.length > 0
+            ? `0.75fr ${plans.slice(1).map(() => "1fr").join(" ")}`
+            : "1fr",
+        }}
+      >
+        {plans.map((plan) => {
           const isRecommended = !!plan.tag;
+          const isFreeTier = plan.slug === "free" || plan.priceInr == null;
+          const canShowPerMonth =
+            typeof plan.priceInr === "number" &&
+            typeof plan.months === "number" &&
+            plan.months > 0;
+          const perMonth = canShowPerMonth
+            ? `₹${Math.round(plan.priceInr! / plan.months!)}/mo`
+            : null;
+          const paidSubtitle =
+            perMonth ?? (plan.months != null && plan.months > 0 ? `${plan.months}-month access` : "One-time");
+
           return (
             <div
               key={plan.id}
-              className={`rounded-xl p-4 relative flex flex-col ${
+              className={`rounded-xl p-5 relative flex flex-col ${
                 isRecommended
                   ? "bg-yellow-400/5 border-2 border-yellow-400"
-                  : "bg-[#161616] border border-gray-700"
+                  : isFreeTier
+                    ? "bg-[#121212] border border-gray-600/80"
+                    : "bg-[#161616] border border-gray-700"
               }`}
             >
               {isRecommended && (
@@ -125,25 +144,34 @@ export default function PricingPage() {
                   {plan.tag}
                 </div>
               )}
-              <p className={`text-xs font-semibold mb-1 ${isRecommended ? "text-yellow-400" : "text-gray-300"}`}>
-                {plan.label}
-              </p>
+              {!isFreeTier && (
+                <p className={`text-xs font-semibold uppercase tracking-wide mb-1 ${isRecommended ? "text-yellow-400" : "text-gray-400"}`}>
+                  {plan.name}
+                </p>
+              )}
               {PRICING_REVEALING_SOON ? (
                 <>
                   <p className="text-xl font-bold mb-0.5 text-gray-200 tracking-tight">Revealing soon</p>
-                  <p className="text-xs text-gray-500 mb-4">Price coming shortly</p>
+                  <p className="text-xs text-gray-500 mb-5">Price coming shortly</p>
+                </>
+              ) : isFreeTier ? (
+                <>
+                  <p className="text-3xl font-bold mb-0.5 tracking-tight text-white">Free</p>
+                  <p className="text-xs text-gray-500 mb-5">Forever · no card required</p>
                 </>
               ) : (
                 <>
-                  <p className="text-2xl font-bold mb-0.5">₹{plan.price}</p>
-                  <p className="text-xs text-gray-500 mb-4">{plan.perMonth}</p>
+                  <p className="text-3xl font-bold mb-0.5">₹{plan.priceInr}</p>
+                  <p className="text-xs text-gray-500 mb-5">{paidSubtitle}</p>
                 </>
               )}
-              <ul className="space-y-1.5 text-xs text-gray-300 mb-5 flex-1">
-                <li className="flex items-center gap-1.5"><span className="text-green-400">✓</span>All problems</li>
-                <li className="flex items-center gap-1.5"><span className="text-green-400">✓</span>AI evaluation</li>
-                <li className="flex items-center gap-1.5"><span className="text-green-400">✓</span>Score history</li>
-                <li className="flex items-center gap-1.5"><span className="text-green-400">✓</span>{plan.months}-month access</li>
+              <ul className="space-y-2 text-xs text-gray-300 mb-5 flex-1">
+                {plan.featureLabels.map((label) => (
+                  <li key={label} className="flex items-start gap-1.5">
+                    <span className="text-green-400 mt-px shrink-0">✓</span>
+                    <span>{label}</span>
+                  </li>
+                ))}
               </ul>
               {PRICING_REVEALING_SOON ? (
                 <button
@@ -157,10 +185,14 @@ export default function PricingPage() {
                 >
                   Pay — revealing soon
                 </button>
+              ) : isFreeTier ? (
+                <div className="w-full text-center text-xs font-semibold text-green-400 py-2 border border-green-500/30 bg-green-500/5 rounded-xl">
+                  ✓ Active
+                </div>
               ) : (
                 <UpgradeButton
                   planId={plan.id}
-                  label={`Get ${plan.label}`}
+                  label={`Get ${plan.name}`}
                   className={`w-full font-bold py-2 rounded-xl text-xs transition-all disabled:opacity-50 ${
                     isRecommended
                       ? "bg-yellow-400 hover:bg-yellow-300 text-black"
