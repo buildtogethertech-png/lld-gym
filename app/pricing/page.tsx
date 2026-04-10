@@ -13,7 +13,7 @@ export default function PricingPage() {
   const { data: session } = useSession();
   const [isPaid, setIsPaid] = useState(false);
   const [planExpired, setPlanExpired] = useState(false);
-  const [planType, setPlanType] = useState<string | null>(null);
+  const [planName, setPlanName] = useState<string | null>(null);
   const [planExpiry, setPlanExpiry] = useState<string | null>(null);
 
   useEffect(() => {
@@ -23,7 +23,7 @@ export default function PricingPage() {
         .then((d) => {
           setIsPaid(!!d.isPaid);
           setPlanExpired(!!d.planExpired);
-          setPlanType(d.planType ?? null);
+          setPlanName(d.planName ?? null);
           setPlanExpiry(d.planExpiry ?? null);
         });
     } else {
@@ -32,7 +32,6 @@ export default function PricingPage() {
   }, [session]);
 
   if (isPaid) {
-    const activePlan = PLANS.find(p => p.id === planType);
     return (
       <div className="max-w-lg mx-auto">
         <div className="mb-6">
@@ -47,7 +46,7 @@ export default function PricingPage() {
           <div className="text-5xl mb-4">🔥</div>
           <h1 className="text-2xl font-bold mb-2">You have full access!</h1>
           <p className="text-gray-400 mb-6">
-            {activePlan?.label ?? "Active"} plan
+            {planName ?? "Pro"} plan
             {planExpiry && ` · expires ${new Date(planExpiry).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}`}
           </p>
           <Link href="/" className="inline-block bg-yellow-400 hover:bg-yellow-300 text-black font-bold px-6 py-3 rounded-xl text-sm transition-colors">

@@ -82,7 +82,7 @@ export default function CodeEditor({
 
   if (fillHeight) {
     return (
-      <div className="w-full h-full">
+      <div className="w-full h-full" data-testid="monaco-code-editor">
         <MonacoEditor
           height="100%"
           language={language}
@@ -117,7 +117,7 @@ export default function CodeEditor({
   }
 
   return (
-    <div className="rounded-xl overflow-hidden border border-gray-800 flex flex-col select-none">
+    <div className="rounded-xl overflow-hidden border border-gray-800 flex flex-col select-none" data-testid="monaco-code-editor">
       {/* Monaco */}
       <div style={{ height: editorHeight }}>
         <MonacoEditor

@@ -119,7 +119,9 @@ export default function EvaluationPanel({ result, onClose }: Props) {
       {/* Score + verdict */}
       <div className={`mx-5 mt-5 mb-4 px-4 py-3 rounded-xl border flex items-center gap-4 ${verdict.bg}`}>
         <div className="text-center shrink-0">
-          <p className={`text-4xl font-bold ${verdict.color}`}>{result.total}</p>
+          <p className={`text-4xl font-bold ${verdict.color}`} data-testid="eval-result-total">
+            {result.total}
+          </p>
           <p className="text-xs text-gray-500 mt-0.5">/ 100</p>
         </div>
         <div>

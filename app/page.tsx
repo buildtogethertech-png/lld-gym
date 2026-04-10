@@ -223,7 +223,7 @@ export default function HomePage() {
                     problem={problem}
                     completed={!!submissions[problem.id]?.completed}
                     score={submissions[problem.id]?.score ?? null}
-                    index={PROBLEMS.indexOf(problem)}
+                    index={FOUNDATION_PROBLEMS.length + PROBLEMS.indexOf(problem)}
                     isPaid={isPaid}
                   />
                 ))}

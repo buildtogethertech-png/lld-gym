@@ -10,28 +10,94 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model PlanConfig {
+  id            String   @id @default(uuid())
+  name          String
+  slug          String   @unique  // "free" | "paid" | "plan_onemonth" etc
+
+  // Limits
+  evalTotal     Int?          // lifetime cap (free only); null = unlimited
+  evalHourly    Int?
+  evalDaily     Int?
+  evalMonthly   Int?
+  umlDiagrams   Int
+  noteMaxLength Int
+  problemsCount Int?          // null = unlimited
+
+  // Pricing (null for free/paid base plans)
+  priceInr      Int?
+  months        Int?          // null = free, 0 = lifetime
+  tag           String?       // "RECOMMENDED" etc
+  active        Boolean  @default(true)
+
+  updatedAt     DateTime @updatedAt
+  users         User[]
+  payments      Payment[]
+
+  @@map("plan_configs")
+}
+
 model User {
-  id          String       @id @default(cuid())
-  email       String       @unique
-  name        String?
-  password    String?
-  provider    String   @default("credentials")
-  apiKey      String?
-  aiModel     String?
-  isPaid      Boolean  @default(false)
-  planType    String?  // "sixmonth" | "lifetime"
-  planExpiry  DateTime?
-  paidAt      DateTime?
-  razorpayPaymentId String?
-  razorpayOrderId   String?
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id         String    @id @default(cuid())
+  email      String    @unique
+  name       String?
+  password   String?
+  provider   String    @default("credentials")
+  apiKey     String?
+  aiModel    String?
+  isPaid     Boolean   @default(false)
+  planExpiry DateTime?
+  planId     String?   // FK → PlanConfig.id; null treated as "free"
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
   submissions    Submission[]
   evaluationLogs EvaluationLog[]
   topicNotes     TopicNote[]
   diagrams       Diagram[]
+  payments       Payment[]
+  planConfig     PlanConfig? @relation(fields: [planId], references: [id])
 
   @@map("users")
+}
+
+model Payment {
+  id                  String   @id @default(cuid())
+  userId              String
+  planConfigId        String
+  razorpayOrderId     String   @unique
+  razorpayPaymentId   String   @unique
+  amountInr           Int
+  paidAt              DateTime @default(now())
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planConfig PlanConfig @relation(fields: [planConfigId], references: [id])
+
+  @@map("payments")
+}
+
+// Created when the Razorpay order is created — lets webhook identify user+plan without relying on Razorpay notes
+model RazorpayOrder {
+  id             String   @id @default(cuid())
+  razorpayId     String   @unique  // order_xxx from Razorpay
+  userId         String
+  planSlug       String            // e.g. "plan_threemonth"
+  amountInr      Int
+  createdAt      DateTime @default(now())
+
+  @@map("razorpay_orders")
+}
+
+// Raw webhook log — every hit saved regardless of signature validity
+model WebhookLog {
+  id          String   @id @default(cuid())
+  source      String   @default("razorpay")
+  event       String?             // e.g. "payment.captured"
+  payload     String              // raw JSON body
+  sigValid    Boolean
+  createdAt   DateTime @default(now())
+
+  @@map("webhook_logs")
 }
 
 model EvaluationLog {

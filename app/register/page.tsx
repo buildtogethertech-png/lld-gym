@@ -95,6 +95,7 @@ export default function RegisterPage() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Your name"
+              data-testid="register-name"
               className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm text-gray-100 placeholder:text-gray-600 focus:outline-none focus:border-yellow-400/60 focus:ring-1 focus:ring-yellow-400/20 transition-colors"
             />
           </div>
@@ -107,6 +108,7 @@ export default function RegisterPage() {
               onChange={(e) => setEmail(e.target.value)}
               required
               placeholder="you@example.com"
+              data-testid="register-email"
               className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm text-gray-100 placeholder:text-gray-600 focus:outline-none focus:border-yellow-400/60 focus:ring-1 focus:ring-yellow-400/20 transition-colors"
             />
           </div>
@@ -120,6 +122,7 @@ export default function RegisterPage() {
               required
               minLength={6}
               placeholder="Min 6 characters"
+              data-testid="register-password"
               className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm text-gray-100 placeholder:text-gray-600 focus:outline-none focus:border-yellow-400/60 focus:ring-1 focus:ring-yellow-400/20 transition-colors"
             />
           </div>
@@ -133,6 +136,7 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={loading}
+            data-testid="register-submit"
             className="w-full bg-yellow-400 hover:bg-yellow-300 disabled:opacity-50 text-black font-semibold py-3 rounded-xl text-sm transition-colors"
           >
             {loading ? "Creating account…" : "Create Account"}

@@ -8,12 +8,11 @@ import OpenAI from "openai";
 import { AUTO_COMPLETE_MIN_SCORE } from "@/lib/eval-completion";
 import {
   formatEvalLimitRefresh,
-  getEvalLimits,
-  hasActivePaidPlan,
   resolveEvalLimitTimeZone,
   startOfNextUtcMonth,
   startOfUtcMonth,
 } from "@/lib/eval-limits-config";
+import { getEffectivePlan } from "@/lib/plan-config";
 
 const ALL_PROBLEMS = [...FOUNDATION_PROBLEMS, ...PROBLEMS];
 
@@ -191,19 +190,35 @@ export async function POST(req: NextRequest) {
 
     const user = await prisma.user.findUnique({
       where: { id: uid },
-      select: { apiKey: true, aiModel: true, isPaid: true, planExpiry: true },
+      select: { apiKey: true, aiModel: true, isPaid: true, planExpiry: true, planId: true },
     });
 
-    const limits = getEvalLimits();
-    const paidActive = user ? hasActivePaidPlan(user) : false;
+    // JWT can outlive the DB row (deleted user, wrong id on token, env switch). Never upsert submissions without a real user.
+    if (!user) {
+      return NextResponse.json(
+        {
+          error: "Account not found for this session. Sign out and sign in again.",
+          code: "USER_NOT_FOUND",
+        },
+        { status: 401 }
+      );
+    }
 
-    if (!paidActive) {
+    const plan = await getEffectivePlan({
+      planId: user?.planId ?? null,
+      planExpiry: user?.planExpiry ?? null,
+      isPaid: user?.isPaid ?? false,
+    });
+    // Any non-free tier (paid, plan_onemonth, …) uses hourly/daily/monthly caps from plan_configs.
+    const isFreePlan = plan.slug === "free";
+
+    if (isFreePlan) {
       const totalEvals = await prisma.evaluationLog.count({ where: { userId: uid } });
-      if (totalEvals >= limits.freeMaxEvaluationsTotal) {
-        const n = limits.freeMaxEvaluationsTotal;
+      const limit = plan.evalTotal ?? 2;
+      if (totalEvals >= limit) {
         return NextResponse.json(
           {
-            error: `You've used all ${n} free AI evaluation${n === 1 ? "" : "s"}. Paid plans include more evaluations plus every problem — see Pricing to upgrade.`,
+            error: `You've used all ${limit} free AI evaluation${limit === 1 ? "" : "s"}. Paid plans include more evaluations plus every problem — see Pricing to upgrade.`,
             code: "FREE_LIMIT_REACHED",
           },
           { status: 429 }
@@ -218,7 +233,7 @@ export async function POST(req: NextRequest) {
         prisma.evaluationLog.count({ where: { userId: uid, createdAt: { gte: dayAgo } } }),
         prisma.evaluationLog.count({ where: { userId: uid, createdAt: { gte: monthStart } } }),
       ]);
-      if (hourCount >= limits.paidMaxPerHour) {
+      if (plan.evalHourly !== null && hourCount >= plan.evalHourly) {
         const oldest = await prisma.evaluationLog.findFirst({
           where: { userId: uid, createdAt: { gte: hourAgo } },
           orderBy: { createdAt: "asc" },
@@ -230,14 +245,14 @@ export async function POST(req: NextRequest) {
           : "Retry within an hour.";
         return NextResponse.json(
           {
-            error: `Max ${limits.paidMaxPerHour}/hour. ${when}`,
+            error: `Max ${plan.evalHourly}/hour. ${when}`,
             code: "EVAL_HOURLY_LIMIT",
             ...(refreshAt && { refreshAt: refreshAt.toISOString() }),
           },
           { status: 429 }
         );
       }
-      if (dayCount >= limits.paidMaxPerDay) {
+      if (plan.evalDaily !== null && dayCount >= plan.evalDaily) {
         const oldest = await prisma.evaluationLog.findFirst({
           where: { userId: uid, createdAt: { gte: dayAgo } },
           orderBy: { createdAt: "asc" },
@@ -249,19 +264,19 @@ export async function POST(req: NextRequest) {
           : "Retry within 24 hours.";
         return NextResponse.json(
           {
-            error: `Max ${limits.paidMaxPerDay}/day. ${when}`,
+            error: `Max ${plan.evalDaily}/day. ${when}`,
             code: "EVAL_DAILY_LIMIT",
             ...(refreshAt && { refreshAt: refreshAt.toISOString() }),
           },
           { status: 429 }
         );
       }
-      if (monthCount >= limits.paidMaxPerMonth) {
+      if (plan.evalMonthly !== null && monthCount >= plan.evalMonthly) {
         const monthReset = startOfNextUtcMonth();
         const when = `Resets ${formatEvalLimitRefresh(monthReset, limitDisplayTz)}.`;
         return NextResponse.json(
           {
-            error: `Max ${limits.paidMaxPerMonth}/month. ${when}`,
+            error: `Max ${plan.evalMonthly}/month. ${when}`,
             code: "EVAL_MONTHLY_LIMIT",
             refreshAt: monthReset.toISOString(),
           },

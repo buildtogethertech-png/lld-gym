@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUid } from "@/lib/get-uid";
 import { prisma } from "@/lib/prisma";
-import { hasActivePaidPlan } from "@/lib/eval-limits-config";
+import { getEffectivePlan, getFreePlan, getPaidPlan } from "@/lib/plan-config";
 
 export const dynamic = "force-dynamic";
 
@@ -11,30 +11,57 @@ export async function GET(_req: NextRequest) {
 
   const user = await prisma.user.findUnique({
     where: { id: uid },
-    select: { isPaid: true, planType: true, planExpiry: true, paidAt: true, email: true, name: true },
+    select: { isPaid: true, planExpiry: true, planId: true, email: true, name: true },
   });
 
   if (!user) {
+    const free = await getFreePlan();
+    const paidRef = await getPaidPlan();
     return NextResponse.json(
-      { isPaid: false, planExpired: false },
+      {
+        isPaid: false,
+        planExpired: false,
+        problemsCount: free.problemsCount ?? null,
+        planSlug: free.slug,
+        planName: free.name,
+        umlDiagrams: free.umlDiagrams,
+        paidUmlDiagrams: paidRef.umlDiagrams,
+        evalTotal: free.evalTotal,
+        evalHourly: free.evalHourly,
+        evalDaily: free.evalDaily,
+        evalMonthly: free.evalMonthly,
+      },
       { headers: { "Cache-Control": "private, no-store, max-age=0" } }
     );
   }
 
-  const planAccessActive = hasActivePaidPlan(user);
+  const plan = await getEffectivePlan({
+    planId:    user.planId,
+    planExpiry: user.planExpiry,
+    isPaid:    user.isPaid,
+  });
+
+  const paidRef = await getPaidPlan();
+
+  const planAccessActive = plan.slug !== "free";
   const planExpired = user.isPaid && !planAccessActive;
 
   return NextResponse.json(
     {
-      email: user.email,
-      name: user.name,
-      paidAt: user.paidAt,
-      planType: user.planType,
-      planExpiry: user.planExpiry,
-      /** True only while subscription is valid (respects planExpiry). */
-      isPaid: planAccessActive,
-      /** Had a paid row but planExpiry is in the past — show renew UI. */
+      email:         user.email,
+      name:          user.name,
+      planExpiry:    user.planExpiry,
+      planName:      plan.name,
+      planSlug:      plan.slug,
+      isPaid:        planAccessActive,
       planExpired,
+      problemsCount: plan.problemsCount ?? null,  // null = unlimited
+      umlDiagrams:   plan.umlDiagrams,
+      paidUmlDiagrams: paidRef.umlDiagrams,
+      evalTotal:     plan.evalTotal,
+      evalHourly:    plan.evalHourly,
+      evalDaily:     plan.evalDaily,
+      evalMonthly:   plan.evalMonthly,
     },
     { headers: { "Cache-Control": "private, no-store, max-age=0" } }
   );

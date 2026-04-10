@@ -34,10 +34,10 @@ interface Props {
   completed: boolean;
   score?: number | null;
   index: number;
-  isPaid?: boolean;
+  isPaid: boolean;
 }
 
-export default function ProblemCard({ problem, completed, score, index, isPaid = false }: Props) {
+export default function ProblemCard({ problem, completed, score, index, isPaid }: Props) {
   const diffColor = DIFFICULTY_COLORS[problem.difficulty] ?? "text-gray-400 bg-gray-400/10";
   const diffLabel = DIFFICULTY_LABEL[problem.difficulty] ?? "Unknown";
   const isLocked = !problem.free && !isPaid;

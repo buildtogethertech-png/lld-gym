@@ -86,7 +86,7 @@ function attemptFeedbackLine(result: EvalResult | null): string {
   return map[result.verdict] ?? (result.rawFeedback?.trim().slice(0, 220) ?? "");
 }
 
-export default function ProblemDetailClient({ problem }: { problem: Problem }) {
+export default function ProblemDetailClient({ problem, isLocked, isPaid }: { problem: Problem; isLocked: boolean; isPaid: boolean }) {
   const { data: session } = useSession();
   const [answer, setAnswer] = useState("");
   const [completed, setCompleted] = useState(false);
@@ -97,7 +97,6 @@ export default function ProblemDetailClient({ problem }: { problem: Problem }) {
   const [evalResult, setEvalResult] = useState<EvalResult | null>(null);
   const [evalError, setEvalError] = useState<string | null>(null);
   const [evalErrorCode, setEvalErrorCode] = useState<string | null>(null);
-  const [isPaid, setIsPaid] = useState(false);
   const [language, setLanguage] = useState<LangId>("java");
   const [autoSuggest, setAutoSuggest] = useState(true);
   const [rightMode, setRightMode] = useState<"code" | "uml">("code");
@@ -118,7 +117,6 @@ export default function ProblemDetailClient({ problem }: { problem: Problem }) {
   const [expandedLog, setExpandedLog] = useState<string | null>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isLoggedIn = !!session;
-  const isLocked = !problem.free && !isPaid;
   const diff = DIFFICULTY_LABEL[problem.difficulty] ?? { label: "Unknown", color: "text-gray-400 bg-gray-400/10 border-gray-400/20" };
 
   // ── Horizontal split resize ───────────────────────────────────────────────
@@ -165,13 +163,6 @@ export default function ProblemDetailClient({ problem }: { problem: Problem }) {
     setLanguage(readStoredEditorLanguage());
   }, []);
 
-  useEffect(() => {
-    if (session) {
-      fetch("/api/user/me", { cache: "no-store" })
-        .then((r) => r.json())
-        .then((d) => setIsPaid(d.isPaid ?? false));
-    }
-  }, [session]);
 
   const setLanguagePersist = useCallback((next: LangId) => {
     setLanguage(next);
@@ -700,7 +691,12 @@ export default function ProblemDetailClient({ problem }: { problem: Problem }) {
                   {SHOW_USER_OWN_API_KEY_UI && evalError.includes("API key") && evalErrorCode !== "FREE_LIMIT_REACHED" && (
                     <Link href="/settings" className="text-yellow-400 hover:text-yellow-300 underline shrink-0">Add key →</Link>
                   )}
-                  {evalError.includes("Sign in") && (
+                  {evalErrorCode === "USER_NOT_FOUND" && (
+                    <Link href="/login" className="text-yellow-400 hover:text-yellow-300 underline shrink-0">
+                      Sign in again →
+                    </Link>
+                  )}
+                  {evalError.includes("Sign in") && evalErrorCode !== "USER_NOT_FOUND" && (
                     <Link href="/login" className="text-yellow-400 hover:text-yellow-300 underline shrink-0">Sign in →</Link>
                   )}
                 </div>
@@ -711,6 +707,7 @@ export default function ProblemDetailClient({ problem }: { problem: Problem }) {
               type="button"
               onClick={handleEvaluate}
               disabled={evaluating}
+              data-testid="evaluate-ai-button"
               className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161616] ${
                 evaluating
                   ? "bg-gray-700 text-gray-400 cursor-not-allowed"

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getUid } from "@/lib/get-uid";
 import { prisma } from "@/lib/prisma";
-import { NOTE_MAX_LENGTH } from "@/lib/note-limits";
+import { getEffectivePlan } from "@/lib/plan-config";
 
 export async function GET(_req: Request, { params }: { params: { topicId: string } }) {
   const uid = await getUid();
@@ -22,7 +22,9 @@ export async function PUT(req: Request, { params }: { params: { topicId: string 
   const { content } = await req.json();
   if (typeof content !== "string") return NextResponse.json({ error: "Invalid" }, { status: 400 });
 
-  const trimmed = content.slice(0, NOTE_MAX_LENGTH);
+  const user = await prisma.user.findUnique({ where: { id: uid }, select: { isPaid: true, planId: true, planExpiry: true } });
+  const plan = await getEffectivePlan({ planId: user?.planId ?? null, planExpiry: user?.planExpiry ?? null, isPaid: user?.isPaid ?? false });
+  const trimmed = content.slice(0, plan.noteMaxLength);
 
   const note = await prisma.topicNote.upsert({
     where: { userId_topicId: { userId: uid, topicId: params.topicId } },

@@ -189,9 +189,11 @@ export default function UMLEditor({ diagramId, initialTitle, initialNodes, initi
     fetch("/api/diagrams").then(r => r.json()).then((list: { id: string }[]) => {
       setDiagramCount(list.length);
     });
-    fetch("/api/user/me").then(r => r.json()).then((u) => {
-      setDiagramLimit(u.isPaid ? 100 : 2);
-    });
+    fetch("/api/user/me")
+      .then((r) => r.json())
+      .then((u: { umlDiagrams?: number; isPaid?: boolean }) => {
+        setDiagramLimit(typeof u.umlDiagrams === "number" ? u.umlDiagrams : u.isPaid ? 100 : 2);
+      });
   }, [session?.user]);
 
   const onConnect = useCallback(
@@ -311,11 +313,13 @@ export default function UMLEditor({ diagramId, initialTitle, initialNodes, initi
                 onChange={(e) => setTitle(e.target.value.slice(0, 100))}
                 onBlur={() => setEditingTitle(false)}
                 onKeyDown={(e) => e.key === "Enter" && setEditingTitle(false)}
+                data-testid="uml-title-input"
                 className="text-sm font-semibold text-gray-200 bg-gray-800 border border-gray-600 rounded px-2 py-0.5 outline-none w-44"
               />
             ) : (
               <button
                 onClick={() => setEditingTitle(true)}
+                data-testid="uml-title-display"
                 className="text-sm font-semibold text-gray-300 hover:text-white transition-colors truncate max-w-[160px]"
                 title="Click to rename"
               >
@@ -387,6 +391,7 @@ export default function UMLEditor({ diagramId, initialTitle, initialNodes, initi
           <button
             onClick={saveDiagram}
             disabled={saving}
+            data-testid="uml-save-button"
             className="flex items-center gap-1.5 text-xs bg-yellow-400 hover:bg-yellow-300 disabled:opacity-50 text-black font-semibold px-3 py-1.5 rounded-lg transition-colors"
           >
             <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

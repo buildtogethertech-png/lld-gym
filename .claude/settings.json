@@ -32,7 +32,8 @@
       "WebSearch",
       "Bash(node -e \"const { PrismaClient } = require\\('@prisma/client'\\); const p = new PrismaClient\\(\\); console.log\\(typeof p.topicNote\\);\")",
       "Bash(mkdir -p /Users/gauravmandal/reach-lld/app/api/diagrams/\\\\[id\\\\])",
-      "Bash(mkdir -p /Users/gauravmandal/reach-lld/app/uml-practice/\\\\[id\\\\])"
+      "Bash(mkdir -p /Users/gauravmandal/reach-lld/app/uml-practice/\\\\[id\\\\])",
+      "Bash(npx ts-node:*)"
     ],
     "additionalDirectories": [
       "/Users/gauravmandal/reach-lld/app/api/evaluation-logs",

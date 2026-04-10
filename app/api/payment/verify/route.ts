@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getUid } from "@/lib/get-uid";
 import { prisma } from "@/lib/prisma";
 import { PLAN_MAP, getPlanExpiry } from "@/lib/plans";
+import { invalidatePlanCache } from "@/lib/plan-config";
+import { notifyPurchaseReceipt } from "@/lib/purchase-receipt-email";
 import crypto from "crypto";
 
 export async function POST(req: NextRequest) {
@@ -27,10 +29,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
     }
 
-    const razorpay_order_id = body.razorpay_order_id as string | undefined;
+    const razorpay_order_id   = body.razorpay_order_id   as string | undefined;
     const razorpay_payment_id = body.razorpay_payment_id as string | undefined;
-    const razorpay_signature = body.razorpay_signature as string | undefined;
-    const planId = (body.plan as string | undefined) ?? "twelvemonth";
+    const razorpay_signature  = body.razorpay_signature  as string | undefined;
+    const planSlug            = (body.plan as string | undefined) ?? "plan_twelvemonth";
 
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
       return NextResponse.json(
@@ -39,39 +41,85 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const sigPayload = `${razorpay_order_id}|${razorpay_payment_id}`;
+    // Verify HMAC signature
+    const sigPayload  = `${razorpay_order_id}|${razorpay_payment_id}`;
     const expectedHex = crypto.createHmac("sha256", secret).update(sigPayload).digest("hex");
     const receivedHex = String(razorpay_signature).trim().toLowerCase();
-    const sigOk = expectedHex.length === receivedHex.length && expectedHex === receivedHex;
-
-    if (!sigOk) {
-      console.error(
-        "[payment/verify] HMAC mismatch — RAZORPAY_KEY_SECRET must match the same Mode (test/live) and key as RAZORPAY_KEY_ID / NEXT_PUBLIC_RAZORPAY_KEY_ID"
-      );
+    if (expectedHex !== receivedHex) {
+      console.error("[payment/verify] HMAC mismatch");
       return NextResponse.json(
-        {
-          error:
-            "Payment signature failed on our server. Razorpay may show the charge, but access is not updated until this passes. Fix: use the Key Secret from the same Razorpay app and mode (test vs live) as your Key ID in .env.",
-        },
+        { error: "Payment signature verification failed. Access not granted." },
         { status: 400 }
       );
     }
 
-    const plan = PLAN_MAP[planId];
-    if (!plan) return NextResponse.json({ error: "Invalid plan id." }, { status: 400 });
+    // Same payment may be confirmed via webhook first — avoid duplicate row + duplicate email
+    const already = await prisma.payment.findUnique({
+      where: { razorpayPaymentId: razorpay_payment_id },
+    });
+    if (already) {
+      return NextResponse.json({ ok: true, alreadyProcessed: true });
+    }
 
-    const planExpiry = getPlanExpiry(plan);
+    // Lookup plan from PLAN_MAP (for expiry calc) + PlanConfig (for planId FK)
+    const plan = PLAN_MAP[planSlug.replace("plan_", "")];
+    if (!plan) return NextResponse.json({ error: "Invalid plan." }, { status: 400 });
 
+    const planExpiry   = getPlanExpiry(plan);
+    const planConfig   = await prisma.planConfig.findUnique({ where: { slug: planSlug } })
+                      ?? await prisma.planConfig.findUnique({ where: { slug: "paid" } });
+    if (!planConfig) return NextResponse.json({ error: "Plan config not found." }, { status: 500 });
+
+    invalidatePlanCache();
+
+    // Update user access
     await prisma.user.update({
       where: { id: uid },
       data: {
-        isPaid: true,
-        planType: planId,
+        isPaid:    true,
         planExpiry,
-        paidAt: new Date(),
-        razorpayPaymentId: razorpay_payment_id,
-        razorpayOrderId: razorpay_order_id,
+        planId:    planConfig.id,
       },
+    });
+
+    // Insert payment record (full history, never overwritten)
+    const amountInr = planConfig.priceInr ?? plan.price;
+    await prisma.payment.create({
+      data: {
+        userId:             uid,
+        planConfigId:       planConfig.id,
+        razorpayOrderId:    razorpay_order_id,
+        razorpayPaymentId:  razorpay_payment_id,
+        amountInr,
+      },
+    });
+
+    // Same table as Razorpay POST webhooks — checkout path never hits /api/payment/webhook unless you expose a public URL there.
+    try {
+      await prisma.webhookLog.create({
+        data: {
+          source: "checkout_verify",
+          event: "payment.verified",
+          sigValid: true,
+          payload: JSON.stringify({
+            razorpay_order_id,
+            razorpay_payment_id,
+            planSlug,
+            userId: uid,
+            amountInr,
+          }),
+        },
+      });
+    } catch (logErr) {
+      console.warn("[payment/verify] webhook_logs audit row failed (payment still saved)", logErr);
+    }
+
+    void notifyPurchaseReceipt({
+      userId: uid,
+      planName: planConfig.name,
+      amountInr,
+      razorpayOrderId: razorpay_order_id,
+      razorpayPaymentId: razorpay_payment_id,
     });
 
     return NextResponse.json({ ok: true });

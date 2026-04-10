@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { getUid } from "@/lib/get-uid";
 import { prisma } from "@/lib/prisma";
-import { getUmlLimit, UML_LIMITS } from "@/lib/uml-limits";
+import { getEffectivePlan, getFreePlan, getPaidPlan } from "@/lib/plan-config";
 import DeleteDiagramButton from "./DeleteDiagramButton";
 
 export const metadata: Metadata = {
@@ -14,16 +14,20 @@ export default async function MyDiagramsPage() {
   const uid = await getUid();
   if (!uid) redirect("/login");
 
-  const [diagrams, user] = await Promise.all([
+  const [diagrams, user, paidRef] = await Promise.all([
     prisma.diagram.findMany({
       where: { userId: uid },
       orderBy: { updatedAt: "desc" },
       select: { id: true, title: true, updatedAt: true, createdAt: true, nodes: true },
     }),
-    prisma.user.findUnique({ where: { id: uid }, select: { isPaid: true } }),
+    prisma.user.findUnique({ where: { id: uid }, select: { isPaid: true, planId: true, planExpiry: true } }),
+    getPaidPlan(),
   ]);
 
-  const limit = getUmlLimit(user?.isPaid ?? false);
+  const plan = user ? await getEffectivePlan(user) : await getFreePlan();
+  const limit = plan.umlDiagrams;
+  const isFreeTier = plan.slug === "free";
+  const paidUmlCap = paidRef.umlDiagrams;
   const count = diagrams.length;
   const atLimit = count >= limit;
 
@@ -39,11 +43,13 @@ export default async function MyDiagramsPage() {
         </Link>
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight mb-1">My Diagrams</h1>
+            <h1 className="text-2xl font-bold tracking-tight mb-1" data-testid="my-diagrams-heading">
+              My Diagrams
+            </h1>
             <p className="text-sm text-gray-500">
               {count === 0
                 ? "No diagrams yet. Start drawing."
-                : `${count} of ${limit} diagrams used${!user?.isPaid ? ` (free tier — upgrade for ${UML_LIMITS.paid})` : ""}`}
+                : `${count} of ${limit} diagrams used${isFreeTier ? ` (free tier — upgrade for up to ${paidUmlCap})` : ""}`}
             </p>
           </div>
           {atLimit ? (
@@ -71,9 +77,9 @@ export default async function MyDiagramsPage() {
       <div className="mb-6">
         <div className="flex items-center justify-between mb-1.5">
           <span className="text-xs text-gray-600">{count}/{limit} diagrams</span>
-          {!user?.isPaid && (
+          {isFreeTier && (
             <Link href="/pricing" className="text-xs text-yellow-400/70 hover:text-yellow-400 transition-colors">
-              Upgrade for {UML_LIMITS.paid} →
+              Upgrade for up to {paidUmlCap} →
             </Link>
           )}
         </div>

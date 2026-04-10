@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getUid } from "@/lib/get-uid";
 import { prisma } from "@/lib/prisma";
-import { getUmlLimit } from "@/lib/uml-limits";
+import { getEffectivePlan } from "@/lib/plan-config";
 
 // GET — list user's diagrams
 export async function GET() {
@@ -25,8 +25,9 @@ export async function POST(req: Request) {
   const { title, nodes, edges } = await req.json();
 
   // Check limit
-  const user = await prisma.user.findUnique({ where: { id: uid }, select: { isPaid: true } });
-  const limit = getUmlLimit(user?.isPaid ?? false);
+  const user = await prisma.user.findUnique({ where: { id: uid }, select: { isPaid: true, planId: true, planExpiry: true } });
+  const plan = await getEffectivePlan({ planId: user?.planId ?? null, planExpiry: user?.planExpiry ?? null, isPaid: user?.isPaid ?? false });
+  const limit = plan.umlDiagrams;
   const count = await prisma.diagram.count({ where: { userId: uid } });
 
   if (count >= limit) {

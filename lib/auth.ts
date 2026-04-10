@@ -3,6 +3,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import { prisma } from "./prisma";
 import bcrypt from "bcryptjs";
+import { getFreePlan } from "./plan-config";
 
 const useSecureCookies = process.env.NEXTAUTH_URL?.startsWith("https://");
 /** SameSite=None requires Secure; on http://localhost use Lax or OAuth state cookies are dropped. */
@@ -65,6 +66,7 @@ export const authOptions: NextAuthOptions = {
     async signIn({ user, account }) {
       // For Google sign-ins: upsert the user in our DB
       if (account?.provider === "google" && user.email) {
+        const freePlan = await getFreePlan();
         await prisma.user.upsert({
           where: { email: user.email },
           update: { name: user.name ?? undefined },
@@ -72,6 +74,7 @@ export const authOptions: NextAuthOptions = {
             email: user.email,
             name: user.name ?? null,
             provider: "google",
+            planId: freePlan.id,
           },
         });
       }

@@ -29,5 +29,15 @@ export async function POST(req: NextRequest) {
     notes: { userId: uid, email: user?.email ?? "", plan: planId },
   });
 
+  // Store order → user/plan mapping so webhook can identify without relying on Razorpay notes
+  await prisma.razorpayOrder.create({
+    data: {
+      razorpayId: order.id,
+      userId:     uid,
+      planSlug:   `plan_${planId}`,
+      amountInr:  plan.price,
+    },
+  });
+
   return NextResponse.json({ orderId: order.id, amount: plan.amountPaise, currency: "INR", plan: planId });
 }

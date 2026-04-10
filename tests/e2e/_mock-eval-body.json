@@ -1,0 +1,44 @@
+{
+  "total": 88,
+  "categories": [
+    {
+      "name": "Entity Modeling",
+      "score": 18,
+      "max": 20,
+      "good": "E2E mock",
+      "bad": "E2E mock"
+    },
+    {
+      "name": "Relationships",
+      "score": 17,
+      "max": 20,
+      "good": "E2E mock",
+      "bad": "E2E mock"
+    },
+    {
+      "name": "SOLID Principles",
+      "score": 18,
+      "max": 20,
+      "good": "E2E mock",
+      "bad": "E2E mock"
+    },
+    {
+      "name": "Design Patterns",
+      "score": 17,
+      "max": 20,
+      "good": "E2E mock",
+      "bad": "E2E mock"
+    },
+    {
+      "name": "Code Quality",
+      "score": 18,
+      "max": 20,
+      "good": "E2E mock",
+      "bad": "E2E mock"
+    }
+  ],
+  "verdict": "strong",
+  "improvements": ["E2E improvement 1", "E2E improvement 2", "E2E improvement 3"],
+  "rawFeedback": "E2E mock evaluation",
+  "modelUsed": "e2e-mock"
+}

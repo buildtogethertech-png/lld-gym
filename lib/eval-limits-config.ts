@@ -1,36 +1,6 @@
 /**
- * AI evaluation quotas (each successful evaluate creates one EvaluationLog row).
- * Override via environment variables (integers, 0 = disabled only if you patch logic; min 1 recommended).
+ * Helpers for AI evaluation rate-limit messaging (quotas live in PlanConfig / plan_configs).
  */
-
-function readInt(name: string, fallback: number): number {
-  const raw = process.env[name];
-  if (raw === undefined || raw === "") return fallback;
-  const n = Number.parseInt(raw, 10);
-  return Number.isFinite(n) && n >= 0 ? n : fallback;
-}
-
-export function getEvalLimits() {
-  return {
-    /** Max total AI evaluations for unpaid users (lifetime). */
-    freeMaxEvaluationsTotal: readInt("EVAL_FREE_MAX_TOTAL", 2),
-    /** Paid users: max evaluations in the last rolling hour. */
-    paidMaxPerHour: readInt("EVAL_PAID_MAX_HOURLY", 2),
-    /** Paid users: max evaluations in the last rolling 24 hours. */
-    paidMaxPerDay: readInt("EVAL_PAID_MAX_DAILY", 20),
-    /** Paid users: max evaluations in the current UTC calendar month. */
-    paidMaxPerMonth: readInt("EVAL_PAID_MAX_MONTHLY", 100),
-  };
-}
-
-export function hasActivePaidPlan(user: {
-  isPaid: boolean;
-  planExpiry: Date | null;
-}): boolean {
-  if (!user.isPaid) return false;
-  if (!user.planExpiry) return true;
-  return user.planExpiry > new Date();
-}
 
 export function startOfUtcMonth(d = new Date()): Date {
   return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1, 0, 0, 0, 0));
