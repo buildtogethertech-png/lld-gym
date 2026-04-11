@@ -11,6 +11,8 @@ interface PlanData {
   slug: string;
   name: string;
   priceInr: number | null;
+  originalPriceInr: number | null;
+  discountPct: number | null;
   months: number | null;
   tag: string | null;
   features: string[];
@@ -161,7 +163,17 @@ export default function PricingPage() {
                 </>
               ) : (
                 <>
-                  <p className="text-3xl font-bold mb-0.5">₹{plan.priceInr}</p>
+                  <div className="flex items-baseline gap-2 mb-0.5">
+                    <p className="text-3xl font-bold">₹{plan.priceInr}</p>
+                    {plan.originalPriceInr && (
+                      <p className="text-sm text-gray-500 line-through">₹{plan.originalPriceInr}</p>
+                    )}
+                    {plan.discountPct && (
+                      <span className="text-xs font-bold text-green-400 bg-green-400/10 border border-green-400/20 px-1.5 py-0.5 rounded-full">
+                        -{plan.discountPct}%
+                      </span>
+                    )}
+                  </div>
                   <p className="text-xs text-gray-500 mb-5">{paidSubtitle}</p>
                 </>
               )}

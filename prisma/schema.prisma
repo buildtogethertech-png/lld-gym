@@ -33,6 +33,7 @@ model PlanConfig {
 
   // Pricing (null for free/paid base plans)
   priceInr      Int?
+  discountPct   Int?          // e.g. 20 means 20% off; null = no discount shown
   months        Int?          // null = free, 0 = lifetime
   tag           String?       // "RECOMMENDED" etc
   active        Boolean  @default(true)

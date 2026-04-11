@@ -23,18 +23,23 @@ export async function GET() {
         slug: true,
         name: true,
         priceInr: true,
+        discountPct: true,
         months: true,
         tag: true,
         features: true,
       },
     });
 
-
     const plans = dbPlans.map((p) => ({
       id: p.slug.replace("plan_", ""),
       slug: p.slug,
       name: p.name,
       priceInr: p.priceInr,
+      // originalPrice: back-calculated from discountPct so priceInr is always the final price
+      originalPriceInr: p.discountPct && p.priceInr
+        ? Math.round(p.priceInr / (1 - p.discountPct / 100))
+        : null,
+      discountPct: p.discountPct,
       months: p.months,
       tag: p.tag,
       features: p.features,
