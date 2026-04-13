@@ -34,12 +34,16 @@
       "Bash(mkdir -p /Users/gauravmandal/reach-lld/app/api/diagrams/\\\\[id\\\\])",
       "Bash(mkdir -p /Users/gauravmandal/reach-lld/app/uml-practice/\\\\[id\\\\])",
       "Bash(npx ts-node:*)",
-      "Bash(npx next:*)"
+      "Bash(npx next:*)",
+      "Bash(xxd /Users/gauravmandal/reach-lld/app/blog/content/expense-splitter-lld-design.tsx)",
+      "Bash(node -e \" const webpack = require\\('webpack'\\); console.log\\('webpack version:', webpack.version\\); \")"
     ],
     "additionalDirectories": [
       "/Users/gauravmandal/reach-lld/app/api/evaluation-logs",
       "/Users/gauravmandal/reach-lld/app/learn",
-      "/Users/gauravmandal/reach-lld/app/api/notes"
+      "/Users/gauravmandal/reach-lld/app/api/notes",
+      "/Users/gauravmandal/reach-lld/app/blog",
+      "/Users/gauravmandal/reach-lld/content/blog"
     ]
   }
 }
