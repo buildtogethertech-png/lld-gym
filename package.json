@@ -7,8 +7,8 @@
   },
   "scripts": {
     "postinstall": "prisma generate",
-    "dev": "next dev -p 3001",
-    "fresh": "rm -rf .next && next dev -p 3001",
+    "dev": "next dev -p 3002",
+    "fresh": "rm -rf .next && next dev -p 3002",
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint",

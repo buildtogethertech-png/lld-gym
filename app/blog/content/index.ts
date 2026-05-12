@@ -24,6 +24,7 @@ import Logger             from "./logger-framework-lld-design";
 import SolidPrinciples    from "./solid-principles-lld-interview";
 import DesignPatterns     from "./design-patterns-lld-interview";
 import CrackLLD           from "./how-to-crack-lld-interview";
+import TopProblems        from "./top-lld-problems-interview";
 
 export const BLOG_CONTENT: Record<string, FC> = {
   "parking-lot-lld-design":          ParkingLot,
@@ -49,4 +50,5 @@ export const BLOG_CONTENT: Record<string, FC> = {
   "solid-principles-lld-interview":  SolidPrinciples,
   "design-patterns-lld-interview":   DesignPatterns,
   "how-to-crack-lld-interview":      CrackLLD,
+  "top-lld-problems-interview":      TopProblems,
 };

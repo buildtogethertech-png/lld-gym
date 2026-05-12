@@ -214,6 +214,14 @@ export const BLOG_POSTS: BlogPost[] = [
     tags: ["lld", "interview-tips", "career"],
     readingTime: 11,
   },
+  {
+    slug: "top-lld-problems-interview",
+    title: "Top LLD Problems for Software Engineering Interviews",
+    description: "A curated list of the 20 best Low Level Design problems asked at Amazon, Flipkart, Swiggy, Uber, and other product companies — grouped by difficulty with Java code examples.",
+    date: "2025-05-12",
+    tags: ["lld", "interview-tips", "oop", "design-patterns", "career"],
+    readingTime: 12,
+  },
 ];
 
 export function getBlogPost(slug: string): BlogPost | undefined {
