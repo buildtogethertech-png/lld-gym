@@ -5,6 +5,7 @@ import { useSearchParams, usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 
 const STORAGE_KEY = "lldhub_utm";
+const VISIT_SESSION_KEY = "lldhub_visit_logged";
 
 export function getStoredUTM(): { utmSource?: string; utmMedium?: string; utmCampaign?: string } {
   if (typeof window === "undefined") return {};
@@ -29,9 +30,25 @@ export default function UTMCapture() {
 
     if (!source && !medium && !campaign) return;
 
-    const existing = localStorage.getItem(STORAGE_KEY);
-    if (existing) return; // first-touch: keep the original source
+    // Log every visit with UTMs — one entry per browser session
+    const alreadyLogged = sessionStorage.getItem(VISIT_SESSION_KEY);
+    if (!alreadyLogged) {
+      fetch("/api/visit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          utmSource: source,
+          utmMedium: medium,
+          utmCampaign: campaign,
+          landingPage: pathname,
+        }),
+      }).catch(() => {});
+      sessionStorage.setItem(VISIT_SESSION_KEY, "1");
+    }
 
+    // Save to localStorage for attribution on signup (first-touch only)
+    const existing = localStorage.getItem(STORAGE_KEY);
+    if (existing) return;
     localStorage.setItem(
       STORAGE_KEY,
       JSON.stringify({ utmSource: source ?? undefined, utmMedium: medium ?? undefined, utmCampaign: campaign ?? undefined })

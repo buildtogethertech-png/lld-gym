@@ -153,6 +153,20 @@ model Diagram {
   @@map("diagrams")
 }
 
+model VisitLog {
+  id          String   @id @default(cuid())
+  utmSource   String?
+  utmMedium   String?
+  utmCampaign String?
+  landingPage String?
+  userId      String?  // null = anonymous visitor
+  createdAt   DateTime @default(now())
+
+  @@index([utmSource])
+  @@index([createdAt])
+  @@map("visit_logs")
+}
+
 model Submission {
   id        String   @id @default(cuid())
   userId    String

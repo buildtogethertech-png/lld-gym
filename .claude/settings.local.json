@@ -12,7 +12,11 @@
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3001)",
       "Bash(DATABASE_URL=\"postgresql://gauravmandal@localhost:5432/lld-gym-development\" npx prisma migrate dev --name add_payment)",
       "Bash(DATABASE_URL=\"postgresql://gauravmandal@localhost:5432/lld-gym-development\" npx prisma migrate dev --name add_language_snippets)",
-      "Bash(DATABASE_URL='postgresql://neondb_owner:npg_YFXto0RZv3Te@ep-shy-cell-am4b8y6r-pooler.c-5.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require' node -e ' *)"
+      "Bash(DATABASE_URL='postgresql://neondb_owner:npg_YFXto0RZv3Te@ep-shy-cell-am4b8y6r-pooler.c-5.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require' node -e ' *)",
+      "Bash(mkdir -p /Users/gauravmandal/reach-lld/app/api/visit)"
+    ],
+    "additionalDirectories": [
+      "/Users/gauravmandal/reach-lld/app/api"
     ]
   }
 }
