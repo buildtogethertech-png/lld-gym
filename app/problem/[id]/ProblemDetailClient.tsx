@@ -391,7 +391,7 @@ export default function ProblemDetailClient({ problem, isLocked, isPaid }: { pro
                   <ul className="space-y-2">
                     {problem.requirements.map((req, i) => (
                       <li key={i} className="flex items-start gap-2 text-sm text-gray-300">
-                        <span className="text-yellow-400 mt-0.5 shrink-0">▸</span>{req}
+                        <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 mt-1.5 shrink-0" />{req}
                       </li>
                     ))}
                   </ul>

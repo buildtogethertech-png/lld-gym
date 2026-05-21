@@ -5,7 +5,7 @@ import { getFreePlan } from "@/lib/plan-config";
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, password, name } = await req.json();
+    const { email, password, name, utmSource, utmMedium, utmCampaign } = await req.json();
 
     if (!email || !password) {
       return NextResponse.json({ error: "Email and password required" }, { status: 400 });
@@ -28,7 +28,16 @@ export async function POST(req: NextRequest) {
     const hashed = await bcrypt.hash(password, 10);
     const freePlan = await getFreePlan();
     const user = await prisma.user.create({
-      data: { email, name: name || null, password: hashed, provider: "credentials", planId: freePlan.id },
+      data: {
+        email,
+        name: name || null,
+        password: hashed,
+        provider: "credentials",
+        planId: freePlan.id,
+        utmSource: utmSource ?? null,
+        utmMedium: utmMedium ?? null,
+        utmCampaign: utmCampaign ?? null,
+      },
     });
 
     return NextResponse.json({ id: user.id, email: user.email }, { status: 201 });

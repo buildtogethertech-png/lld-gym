@@ -4,6 +4,7 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { getStoredUTM } from "@/components/UTMCapture";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -22,7 +23,7 @@ export default function RegisterPage() {
     const res = await fetch("/api/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, password }),
+      body: JSON.stringify({ name, email, password, ...getStoredUTM() }),
     });
 
     if (!res.ok) {
@@ -32,6 +33,7 @@ export default function RegisterPage() {
       return;
     }
 
+    localStorage.setItem("lldhub_utm_saved", "1");
     const signRes = await signIn("credentials", { email, password, redirect: false });
     if (!signRes || signRes.error || !signRes.ok) {
       setError(
