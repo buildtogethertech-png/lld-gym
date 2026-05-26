@@ -8,6 +8,7 @@ import dynamic from "next/dynamic";
 import { Problem } from "@/lib/types";
 import type { EvalResult } from "@/app/api/evaluate/route";
 import EvaluationPanel from "@/components/EvaluationPanel";
+import ShareModal from "@/components/ShareModal";
 import UpgradeButton from "@/components/UpgradeButton";
 import { generateStarterCode } from "@/lib/starter-code";
 import { AUTO_COMPLETE_MIN_SCORE } from "@/lib/eval-completion";
@@ -95,6 +96,7 @@ export default function ProblemDetailClient({ problem, isLocked, isPaid }: { pro
   const [savedAt, setSavedAt] = useState<string | null>(null);
   const [evaluating, setEvaluating] = useState(false);
   const [evalResult, setEvalResult] = useState<EvalResult | null>(null);
+  const [showShareModal, setShowShareModal] = useState(false);
   const [evalError, setEvalError] = useState<string | null>(null);
   const [evalErrorCode, setEvalErrorCode] = useState<string | null>(null);
   const [language, setLanguage] = useState<LangId>("java");
@@ -234,12 +236,13 @@ export default function ProblemDetailClient({ problem, isLocked, isPaid }: { pro
     setEvaluating(false);
     if (!res.ok) { setEvalError(data.error ?? "Evaluation failed"); setEvalErrorCode(data.code ?? null); return; }
     setEvalResult(data as EvalResult);
+    if (localStorage.getItem("lldhub_share_dismissed") !== "1") setShowShareModal(true);
     const total = (data as EvalResult).total;
     setScore(total);
     setCompleted(total >= AUTO_COMPLETE_MIN_SCORE);
     if (total >= AUTO_COMPLETE_MIN_SCORE) window.dispatchEvent(new Event("lld:progress"));
     loadLogs();
-    setLeftTab("submissions");
+    setLeftTab("description");
   }
 
   // ── Paywall ───────────────────────────────────────────────────────────────
@@ -262,7 +265,8 @@ export default function ProblemDetailClient({ problem, isLocked, isPaid }: { pro
 
   // ── Full-screen split layout ──────────────────────────────────────────────
   return (
-    // Full viewport below navbar (h-14 = 56px)
+    <>
+    {/* Full viewport below navbar (h-14 = 56px) */}
     <div className="fixed inset-0 top-14 bg-[#0f0f0f] flex flex-col">
 
       {/* ── Top bar ── */}
@@ -724,5 +728,15 @@ export default function ProblemDetailClient({ problem, isLocked, isPaid }: { pro
         </div>
       </div>
     </div>
+
+    {showShareModal && evalResult && (
+      <ShareModal
+        result={evalResult}
+        problemTitle={problem.title}
+        problemId={problem.id}
+        onClose={() => setShowShareModal(false)}
+      />
+    )}
+    </>
   );
 }

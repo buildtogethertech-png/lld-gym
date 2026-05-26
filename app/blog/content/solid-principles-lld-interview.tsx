@@ -1,94 +1,261 @@
 export default function Content() {
   return (
     <>
-      <p>SOLID principles are the foundation of good Low Level Design. In interviews at Amazon, Flipkart, Google, and other top companies, interviewers expect you to not just know these principles by name but to apply them naturally in your class design. This guide explains each principle with concrete LLD examples.</p>
+      <p>
+        SOLID principles are the five foundational guidelines for writing maintainable object-oriented code.
+        In LLD interviews at Amazon, Flipkart, Swiggy, and Google, interviewers expect you to not just know
+        the acronym but to apply each principle to real system design decisions. This guide explains all five
+        principles with concrete LLD examples and how interviewers test them.
+      </p>
 
-      <h2>Why SOLID Matters in LLD Interviews</h2>
-      <p>Most candidates can recite the SOLID acronym. Few can apply it. Interviewers test SOLID indirectly — they ask "how would you add a new feature?" or "what's the problem with this design?" If you understand SOLID, you instantly spot the issues and propose clean solutions.</p>
+      <h2>What Are SOLID Principles?</h2>
+      <p>
+        SOLID is an acronym coined by Robert C. Martin (Uncle Bob):
+      </p>
+      <ul>
+        <li><strong>S</strong> — Single Responsibility Principle (SRP)</li>
+        <li><strong>O</strong> — Open/Closed Principle (OCP)</li>
+        <li><strong>L</strong> — Liskov Substitution Principle (LSP)</li>
+        <li><strong>I</strong> — Interface Segregation Principle (ISP)</li>
+        <li><strong>D</strong> — Dependency Inversion Principle (DIP)</li>
+      </ul>
+      <p>
+        These principles guide class design decisions. Violating them makes code fragile, hard to test, and
+        resistant to change. In an LLD interview, an interviewer who asks "why did you separate these two
+        classes?" is testing whether you know SRP.
+      </p>
 
       <h2>S — Single Responsibility Principle</h2>
-      <p><em>"A class should have only one reason to change."</em></p>
-      <p><strong>Violation:</strong></p>
-      <pre>{`class ParkingLot {
-  parkVehicle(v: Vehicle): void { ... }
-  calculateFee(ticket: Ticket): number { ... }  // Wrong!
-  sendSMSAlert(msg: string): void { ... }        // Wrong!
-  generateReport(): string { ... }              // Wrong!
+      <p>
+        A class should have only one reason to change. "Reason to change" means one business actor whose
+        requirements can force the class to be modified.
+      </p>
+      <h3>LLD Example: Parking Lot</h3>
+      <pre>{`// VIOLATION: ParkingLot does pricing, persistence, and slot management
+public class ParkingLot {
+    public Ticket parkVehicle(Vehicle v) { ... }
+    public double calculateFee(Ticket t) { ... }  // pricing responsibility
+    public void saveToDatabase(Ticket t) { ... }  // persistence responsibility
+}
+
+// CORRECT: Separate responsibilities
+public class ParkingLot {
+    public Ticket parkVehicle(Vehicle v) { ... }  // slot management only
+}
+public class PricingService {
+    public double calculateFee(Ticket t) { ... }
+}
+public class TicketRepository {
+    public void save(Ticket t) { ... }
 }`}</pre>
-      <p><strong>Fix:</strong> Each responsibility gets its own class — ParkingLot, FeeCalculator, NotificationService, ReportGenerator.</p>
-      <p><strong>Interview tip:</strong> When you see a class doing multiple unrelated things, mention SRP and split it. This is the most commonly violated principle and easiest to spot.</p>
+      <p>
+        If the pricing model changes, only PricingService changes. If the database schema changes, only
+        TicketRepository changes. ParkingLot is untouched by either.
+      </p>
 
       <h2>O — Open/Closed Principle</h2>
-      <p><em>"Open for extension, closed for modification."</em></p>
-      <p><strong>Violation:</strong></p>
-      <pre>{`class FeeCalculator {
-  calculate(vehicle: Vehicle): number {
-    if (vehicle.type === "BIKE")  return 20;
-    if (vehicle.type === "CAR")   return 40;
-    if (vehicle.type === "TRUCK") return 80;
-    // Adding electric vehicle requires modifying this class ❌
-  }
+      <p>
+        Software entities should be open for extension but closed for modification. Add new behavior by
+        adding new code, not by changing existing code.
+      </p>
+      <h3>LLD Example: Notification System</h3>
+      <pre>{`// VIOLATION: Every new channel requires modifying NotificationService
+public class NotificationService {
+    public void send(String type, String message) {
+        if (type.equals("EMAIL")) { emailGateway.send(message); }
+        else if (type.equals("SMS")) { smsGateway.send(message); }
+        // Adding WhatsApp requires editing this class
+    }
+}
+
+// CORRECT: Closed for modification, open for extension via Strategy
+public interface NotificationChannel {
+    void send(String message);
+}
+public class EmailChannel implements NotificationChannel { ... }
+public class SMSChannel  implements NotificationChannel { ... }
+public class WhatsAppChannel implements NotificationChannel { ... } // new — no existing code changed
+
+public class NotificationService {
+    private final Map<String, NotificationChannel> channels;
+    public void send(String type, String message) {
+        channels.get(type).send(message); // unchanged when adding new channel
+    }
 }`}</pre>
-      <p><strong>Fix:</strong> Strategy pattern — each vehicle type implements its own pricing strategy. Adding a new vehicle never touches existing code.</p>
-      <pre>{`interface PricingStrategy { calculateFee(duration: number): number; }
-class BikePricing  implements PricingStrategy { calculateFee(d) { return 20 * Math.ceil(d/60); } }
-class CarPricing   implements PricingStrategy { calculateFee(d) { return 40 * Math.ceil(d/60); } }
-// Add ElectricCarPricing without touching anything ✓`}</pre>
 
       <h2>L — Liskov Substitution Principle</h2>
-      <p><em>"Subclasses must be substitutable for their base class."</em></p>
-      <p><strong>Violation:</strong></p>
-      <pre>{`class Rectangle { setWidth(w) { this.width = w; } setHeight(h) { this.height = h; } }
-class Square extends Rectangle {
-  setWidth(w) { this.width = w; this.height = w; }  // Breaks Rectangle contract ❌
+      <p>
+        Subtypes must be substitutable for their base types without altering the correctness of the program.
+        If you have code that works with a Vehicle, it must work with any subclass of Vehicle.
+      </p>
+      <h3>LLD Example: Payment Methods</h3>
+      <pre>{`// VIOLATION: CryptocurrencyPayment extends CardPayment but throws on getCvv()
+public class CryptocurrencyPayment extends CardPayment {
+    @Override
+    public String getCvv() {
+        throw new UnsupportedOperationException(); // breaks LSP
+    }
+}
+
+// CORRECT: Model the correct hierarchy
+public abstract class Payment {
+    public abstract PaymentResult process(double amount);
+}
+public class CardPayment extends Payment {
+    private String cvv;
+    @Override
+    public PaymentResult process(double amount) { ... }
+}
+public class CryptocurrencyPayment extends Payment {
+    private String walletAddress;
+    @Override
+    public PaymentResult process(double amount) { ... }
 }`}</pre>
-      <p><strong>In LLD interviews:</strong> If your PaymentMethod base class has a processRefund() method but CashPayment can't support refunds, LSP is violated. Either redesign the hierarchy or use a separate RefundablePayment interface.</p>
+      <p>
+        LSP violations are often caught by tests — if you need to check instanceof before calling a method,
+        the hierarchy is wrong.
+      </p>
 
       <h2>I — Interface Segregation Principle</h2>
-      <p><em>"Clients should not be forced to depend on interfaces they don't use."</em></p>
-      <p><strong>Violation:</strong></p>
-      <pre>{`interface Vehicle {
-  getSpeed(): number;
-  fly(): void;    // Not all vehicles can fly ❌
-  sail(): void;   // Not all vehicles can sail ❌
+      <p>
+        Clients should not be forced to depend on interfaces they do not use. Split fat interfaces into
+        smaller, role-specific ones.
+      </p>
+      <h3>LLD Example: Ride Sharing</h3>
+      <pre>{`// VIOLATION: Driver forced to implement unrelated methods
+public interface RideSharingActor {
+    void requestRide(Location from, Location to);   // for passengers only
+    void acceptRide(String rideId);                  // for drivers only
+    void cancelRide(String rideId);
+    void viewEarnings();                             // for drivers only
 }
-class Car implements Vehicle {
-  fly() { throw new Error("Cars can't fly"); }  // Forced to implement ❌
-}`}</pre>
-      <p><strong>Fix:</strong> Split into Driveable, Flyable, Sailable interfaces. Classes implement only what applies.</p>
-      <p><strong>Interview tip:</strong> Watch for fat interfaces. In a Notification system, don't have one giant NotificationService — split into EmailSender, SMSSender, PushSender with a shared Notifier interface.</p>
+
+// CORRECT: Separate by role
+public interface Passenger {
+    void requestRide(Location from, Location to);
+    void cancelRide(String rideId);
+}
+public interface Driver {
+    void acceptRide(String rideId);
+    void viewEarnings();
+    void cancelRide(String rideId);
+}
+
+// Driver implements Driver, Passenger implements Passenger
+// No class is forced to implement irrelevant methods`}</pre>
 
       <h2>D — Dependency Inversion Principle</h2>
-      <p><em>"Depend on abstractions, not concretions."</em></p>
-      <p><strong>Violation:</strong></p>
-      <pre>{`class OrderService {
-  private db = new MySQLDatabase();  // Tightly coupled to MySQL ❌
-  saveOrder(order: Order) { this.db.save(order); }
-}`}</pre>
-      <p><strong>Fix:</strong> Inject the abstraction:</p>
-      <pre>{`interface Database { save(entity: any): void; }
+      <p>
+        High-level modules should not depend on low-level modules. Both should depend on abstractions.
+        Abstractions should not depend on details; details should depend on abstractions.
+      </p>
+      <h3>LLD Example: Inventory Management</h3>
+      <pre>{`// VIOLATION: InventoryService depends directly on MySQL implementation
+public class InventoryService {
+    private final MySqlInventoryRepository repo = new MySqlInventoryRepository(); // concrete dependency
 
-class OrderService {
-  constructor(private db: Database) {}  // Works with MySQL, MongoDB, in-memory ✓
-  saveOrder(order: Order) { this.db.save(order); }
-}`}</pre>
-      <p><strong>In LLD interviews:</strong> When you use constructor injection for strategies, repositories, and services — you're applying DIP. This is what makes systems testable and swappable.</p>
+    public InventoryItem findById(String id) {
+        return repo.findById(id); // cannot swap to MongoDB without changing InventoryService
+    }
+}
 
-      <h2>How to Apply SOLID in an Interview</h2>
-      <p>You don't need to name-drop "Single Responsibility Principle" every 5 minutes. Instead, let your design speak:</p>
+// CORRECT: Depend on abstraction; inject concrete implementation
+public interface InventoryRepository {
+    InventoryItem findById(String id);
+    void save(InventoryItem item);
+}
+
+public class InventoryService {
+    private final InventoryRepository repo; // depends on abstraction
+
+    public InventoryService(InventoryRepository repo) { // injected — testable
+        this.repo = repo;
+    }
+}
+
+// Production: new InventoryService(new MySqlInventoryRepository())
+// Test:       new InventoryService(new InMemoryInventoryRepository())`}</pre>
+
+      <h2>How Interviewers Test SOLID Principles</h2>
       <ul>
-        <li>When splitting classes: "I'm keeping pricing logic separate so changes to fee structure don't affect the parking lot code"</li>
-        <li>When using interfaces: "I'm depending on this abstraction so we can swap implementations later"</li>
-        <li>When the interviewer asks "how would you add X": "Since we used Strategy here, we just add a new class — nothing else changes"</li>
+        <li>
+          <strong>"Why did you create a separate PricingService?"</strong> — Tests SRP. Answer: pricing and
+          parking lot management are two separate reasons to change.
+        </li>
+        <li>
+          <strong>"What if I want to add a new split type to Splitwise?"</strong> — Tests OCP. Answer:
+          add a new SplitStrategy class; no existing code changes.
+        </li>
+        <li>
+          <strong>"Can I use a CryptoCurrency object wherever I use a Card?"</strong> — Tests LSP. Show
+          the correct hierarchy where all payment types share a common interface.
+        </li>
+        <li>
+          <strong>"How would you test the BookingService in isolation?"</strong> — Tests DIP. Answer:
+          inject a mock repository via the constructor — possible only because BookingService depends on
+          an interface, not a concrete class.
+        </li>
       </ul>
 
-      <h2>SOLID Quick Reference for LLD Problems</h2>
+      <h2>SOLID Quick Reference</h2>
+      <pre>{`Principle | One-Line Summary                     | Key Pattern
+--------- | ------------------------------------ | ------------------
+SRP       | One class, one reason to change      | Separate services
+OCP       | Extend behavior, not modify code     | Strategy, Decorator
+LSP       | Subclasses must honor base contracts | Correct inheritance
+ISP       | Small, focused interfaces            | Role interfaces
+DIP       | Depend on abstractions, not concrets | Constructor injection`}</pre>
+
+      <h2>Common Follow-Up Questions</h2>
       <ul>
-        <li><strong>Parking Lot</strong>: SRP (split ParkingLot/FeeCalculator), OCP (Strategy for pricing), DIP (inject PricingStrategy)</li>
-        <li><strong>Notification System</strong>: ISP (split channel interfaces), OCP (add new channels without modifying core)</li>
-        <li><strong>Payment Gateway</strong>: OCP (new payment method = new class), LSP (all PaymentMethod subclasses support charge())</li>
-        <li><strong>Chat App</strong>: SRP (split MessageService/UserService/NotificationService), DIP (inject MessageStore)</li>
+        <li>
+          <strong>"Is it always wrong for a class to have two responsibilities?"</strong> — SRP says one
+          reason to change, not one method. A small helper class that both parses and validates a format
+          may be fine if both change together for the same reason.
+        </li>
+        <li>
+          <strong>"Does OCP mean I can never modify a class?"</strong> — No. Bug fixes and requirement
+          changes that affect the class's own behavior are expected. OCP prevents adding new behavior by
+          forking the existing class with a new if-else branch.
+        </li>
+        <li>
+          <strong>"Can SOLID principles conflict?"</strong> — Yes. Strict ISP can create many tiny
+          interfaces that complicate DIP injection. Strict DIP can make simple code verbose. Apply
+          principles as guidelines, not rules — where the tradeoff makes sense for the complexity at hand.
+        </li>
       </ul>
+
+      <h2>FAQ — SOLID Principles in LLD Interviews</h2>
+
+      <h3>Which SOLID principle is most commonly tested in LLD interviews?</h3>
+      <p>
+        SRP and OCP are the most frequently tested. SRP because most candidates over-stuff classes with
+        unrelated responsibilities. OCP because the Strategy pattern — the canonical OCP implementation —
+        appears in almost every LLD problem (pricing, splitting, assignment).
+      </p>
+
+      <h3>How do you explain DIP to an interviewer?</h3>
+      <p>
+        High-level logic should not know which database, email provider, or payment gateway it is using.
+        It should program to an interface (InventoryRepository, EmailSender). The concrete implementation
+        is injected at startup. This makes high-level modules testable in isolation and swappable without
+        changing business logic.
+      </p>
+
+      <h3>What is the difference between SRP and ISP?</h3>
+      <p>
+        SRP applies to classes: one class, one reason to change. ISP applies to interfaces: one interface,
+        one client role. A class can implement multiple narrow interfaces (ISP) and still have a single
+        responsibility (SRP). Both principles reduce coupling, but at different levels of abstraction.
+      </p>
+
+      <h3>How do SOLID principles relate to design patterns?</h3>
+      <p>
+        Design patterns are concrete implementations of SOLID principles. Strategy implements OCP.
+        Decorator implements OCP and SRP. Factory implements DIP (callers depend on an abstract factory,
+        not concrete constructors). Observer implements SRP (separates event source from event handlers).
+        Knowing both layers — the principle and the pattern — is what interviewers expect.
+      </p>
     </>
   );
 }

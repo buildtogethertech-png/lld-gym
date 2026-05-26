@@ -1,144 +1,269 @@
 export default function Content() {
   return (
     <>
-      <p>Design patterns appear in almost every LLD interview question. Knowing when and how to apply them is what separates candidates who pass from those who don't. This guide covers the 10 most important patterns with real LLD examples from problems asked at Amazon, Flipkart, Uber, and other top companies.</p>
+      <p>
+        Design patterns are the vocabulary of LLD interviews. At Amazon, Flipkart, Swiggy, and Google,
+        90% of LLD problems require one or more of the same 10 patterns. Knowing which pattern to apply —
+        and why — is what separates good answers from great ones. This guide covers all 10 with real LLD
+        examples, Java code, and when to use each.
+      </p>
+
+      <h2>Why Design Patterns Matter in LLD Interviews</h2>
+      <p>
+        An interviewer does not want to see a solution that works. They want to see a solution that is
+        extensible, testable, and well-reasoned. Design patterns give you language to justify your
+        decisions: "I used Strategy here because the pricing algorithm needs to be swappable without
+        changing ParkingLot." That one sentence shows OCP awareness, pattern knowledge, and system
+        thinking simultaneously.
+      </p>
 
       <h2>1. Strategy Pattern</h2>
-      <p><strong>Use when:</strong> Multiple algorithms or behaviors for the same operation, and you want to swap them at runtime.</p>
-      <p><strong>LLD examples:</strong> Fare calculation in Uber, payment methods in e-commerce, split types in Splitwise, pricing in Parking Lot.</p>
-      <pre>{`interface FareStrategy { calculate(km: number, min: number): number; }
-class EconomyFare implements FareStrategy { ... }
-class PremiumFare implements FareStrategy { ... }
+      <p>
+        Define a family of algorithms, encapsulate each, and make them interchangeable. Use when behavior
+        varies and you want to swap it without changing the class that uses it.
+      </p>
+      <pre>{`public interface PricingStrategy {
+    double calculate(Ticket ticket, LocalDateTime exitTime);
+}
+public class HourlyPricing implements PricingStrategy { ... }
+public class FlatRatePricing implements PricingStrategy { ... }
 
-// Usage — switch strategy without changing Trip
-class Trip { constructor(private fare: FareStrategy) {} }`}</pre>
-      <p><strong>Interview signal:</strong> When you see "support multiple X types" or "configurable behavior" — reach for Strategy.</p>
+// ParkingLot uses PricingStrategy — swappable at construction
+public class ParkingLot {
+    private final PricingStrategy pricing;
+    public Payment unpark(String ticketId) {
+        double fee = pricing.calculate(ticket, LocalDateTime.now());
+        ...
+    }
+}`}</pre>
+      <p><strong>Where it appears:</strong> Parking Lot (pricing), Splitwise (split types), Rate Limiter (algorithms), Ride Sharing (fare calculation), Notification System (per-channel delivery).</p>
 
       <h2>2. Observer Pattern</h2>
-      <p><strong>Use when:</strong> One object's state change should notify multiple other objects.</p>
-      <p><strong>LLD examples:</strong> Order status updates in food delivery, trip status in Uber, notification system, social media feed.</p>
-      <pre>{`interface Observer { update(event: Event): void; }
-class Trip {
-  private observers: Observer[] = [];
-  notify(event: Event) { this.observers.forEach(o => o.update(event)); }
+      <p>
+        Define a one-to-many dependency — when one object changes state, all dependents are notified
+        automatically. Use for real-time updates, event-driven systems, and decoupled notifications.
+      </p>
+      <pre>{`public interface OrderObserver {
+    void onStatusChange(Order order, OrderStatus newStatus);
 }
-class RiderApp implements Observer { update(e) { showNotification(e); } }
-class DriverApp implements Observer { update(e) { refreshUI(e); } }`}</pre>
+public class PushNotificationObserver implements OrderObserver { ... }
+public class AnalyticsObserver implements OrderObserver { ... }
 
-      <h2>3. Factory / Factory Method Pattern</h2>
-      <p><strong>Use when:</strong> Object creation logic is complex or varies based on conditions.</p>
-      <p><strong>LLD examples:</strong> Creating different notification types, vehicle creation in Parking Lot, order creation in food delivery.</p>
-      <pre>{`class NotificationFactory {
-  static create(type: "email" | "sms" | "push"): Notification {
-    switch(type) {
-      case "email": return new EmailNotification();
-      case "sms":   return new SMSNotification();
-      case "push":  return new PushNotification();
+public class OrderService {
+    private final List<OrderObserver> observers = new ArrayList<>();
+    public void updateStatus(Order order, OrderStatus status) {
+        order.setStatus(status);
+        observers.forEach(obs -> obs.onStatusChange(order, status));
     }
-  }
 }`}</pre>
+      <p><strong>Where it appears:</strong> Food Delivery (order updates), Chat App (message delivery), Social Feed (new post notifications), Logger (handlers), Inventory (low-stock alerts).</p>
 
-      <h2>4. State Pattern</h2>
-      <p><strong>Use when:</strong> An object's behavior changes dramatically based on its internal state.</p>
-      <p><strong>LLD examples:</strong> Driver states in Uber (Available/OnTrip/Offline), ATM states, elevator states, booking states in BookMyShow.</p>
-      <pre>{`interface DriverState {
-  acceptTrip(driver: Driver): void;
-  goOffline(driver: Driver): void;
+      <h2>3. Factory Pattern</h2>
+      <p>
+        Create objects without specifying the exact class. Use when the type of object to create depends
+        on runtime data and you want to centralize creation logic.
+      </p>
+      <pre>{`public class VehicleFactory {
+    public static Vehicle create(String type, String licensePlate) {
+        return switch (type.toUpperCase()) {
+            case "BIKE"  -> new Bike(licensePlate);
+            case "CAR"   -> new Car(licensePlate);
+            case "TRUCK" -> new Truck(licensePlate);
+            default      -> throw new IllegalArgumentException("Unknown type: " + type);
+        };
+    }
+}`}</pre>
+      <p><strong>Where it appears:</strong> Parking Lot (vehicle creation), Ride Sharing (ride type), Job Scheduler (command creation), Notification (channel creation).</p>
+
+      <h2>4. Singleton Pattern</h2>
+      <p>
+        Ensure only one instance of a class exists and provide a global access point. Use for shared
+        resources (config, connection pools, loggers) that must be consistent across the application.
+      </p>
+      <pre>{`public class ParkingLot {
+    private static volatile ParkingLot instance;
+
+    private ParkingLot() {}
+
+    public static ParkingLot getInstance() {
+        if (instance == null) {
+            synchronized (ParkingLot.class) {
+                if (instance == null) instance = new ParkingLot();
+            }
+        }
+        return instance;
+    }
+}`}</pre>
+      <p><strong>Where it appears:</strong> Parking Lot, Logger, Database connection pool, Cache manager.</p>
+
+      <h2>5. State Pattern</h2>
+      <p>
+        Allow an object to alter its behavior when its internal state changes. The object will appear to
+        change its class. Use for lifecycle management where behavior depends on current state.
+      </p>
+      <pre>{`public interface ElevatorState {
+    void handleRequest(Elevator e, int floor);
+    void move(Elevator e);
 }
-class AvailableState implements DriverState {
-  acceptTrip(driver: Driver) { driver.setState(new OnTripState()); }
-  goOffline(driver: Driver)  { driver.setState(new OfflineState()); }
+public class IdleState    implements ElevatorState { ... }
+public class MovingUpState implements ElevatorState { ... }
+
+public class Elevator {
+    private ElevatorState state = new IdleState();
+    public void setState(ElevatorState state) { this.state = state; }
+    public void move() { state.move(this); } // delegates to current state
+}`}</pre>
+      <p><strong>Where it appears:</strong> Elevator System (elevator states), ATM Machine (card inserted, authenticated), Vending Machine, Traffic Light.</p>
+
+      <h2>6. Command Pattern</h2>
+      <p>
+        Encapsulate a request as an object. Use when you need to parameterize actions, queue them, log
+        them, or support undo operations.
+      </p>
+      <pre>{`public interface StockMovement {
+    void execute();
+    MovementType getType();
 }
-class OnTripState implements DriverState {
-  acceptTrip() { throw new Error("Already on trip"); }
-  goOffline()  { throw new Error("Complete trip first"); }
-}`}</pre>
+public class StockReceiveMovement implements StockMovement { ... }
+public class StockDeductMovement  implements StockMovement { ... }
 
-      <h2>5. Command Pattern</h2>
-      <p><strong>Use when:</strong> You need to encapsulate operations as objects for queuing, logging, or undo.</p>
-      <p><strong>LLD examples:</strong> Job scheduler (each job is a Command), elevator floor requests, inventory operations.</p>
-      <pre>{`interface Command { execute(): void; }
-class ReserveStockCommand implements Command {
-  constructor(private inventory: Inventory, private productId: string, private qty: number) {}
-  execute() { this.inventory.reserve(this.productId, this.qty); }
+// InventoryService calls execute() and logs the command type
+public void executeAndAudit(StockMovement movement) {
+    movement.execute();
+    auditLog.record(movement.getType(), ...);
+}`}</pre>
+      <p><strong>Where it appears:</strong> Inventory Management (stock movements), Job Scheduler (job commands), Text Editor (undo/redo), Elevator (floor requests).</p>
+
+      <h2>7. Chain of Responsibility Pattern</h2>
+      <p>
+        Pass a request along a chain of handlers until one handles it (or all do). Use for ordered
+        processing pipelines where each step decides to handle, modify, or pass the request.
+      </p>
+      <pre>{`public abstract class PaymentHandler {
+    protected PaymentHandler next;
+    public abstract PaymentResult handle(Payment p);
+    protected PaymentResult proceed(Payment p) {
+        return next != null ? next.handle(p) : PaymentResult.proceed();
+    }
 }
-// Queue of commands can be replayed, logged, or undone`}</pre>
+public class FraudCheckHandler extends PaymentHandler { ... }
+public class LimitCheckHandler extends PaymentHandler { ... }
 
-      <h2>6. Decorator Pattern</h2>
-      <p><strong>Use when:</strong> You want to add behavior to an object dynamically without subclassing.</p>
-      <p><strong>LLD examples:</strong> Surge pricing on base fare, adding TTL to cache, layered logging handlers.</p>
-      <pre>{`class SurgePricingDecorator implements FareStrategy {
-  constructor(private base: FareStrategy, private multiplier: number) {}
-  calculate(km: number, min: number): number {
-    return this.base.calculate(km, min) * this.multiplier;
-  }
+// Wire the chain
+fraudHandler.setNext(limitHandler).setNext(authHandler);
+PaymentResult result = fraudHandler.handle(payment);`}</pre>
+      <p><strong>Where it appears:</strong> Payment Gateway (pre-payment checks), Logger (handlers), ATM (cash dispensing notes), API middleware.</p>
+
+      <h2>8. Decorator Pattern</h2>
+      <p>
+        Attach additional responsibilities to an object dynamically. Decorators provide a flexible
+        alternative to subclassing. Use when you want to add behavior without modifying the base class.
+      </p>
+      <pre>{`public class LoyaltyPricing implements PricingStrategy {
+    private final PricingStrategy base; // wraps another strategy
+
+    public LoyaltyPricing(PricingStrategy base, double discount) {
+        this.base = base;
+        this.discount = discount;
+    }
+
+    @Override
+    public double calculatePrice(Room room, LocalDate checkIn, LocalDate checkOut) {
+        return base.calculatePrice(room, checkIn, checkOut) * (1 - discount);
+    }
 }`}</pre>
+      <p><strong>Where it appears:</strong> Hotel Booking (pricing layers), Logger (formatters), I/O streams (Java's own BufferedInputStream wraps InputStream).</p>
 
-      <h2>7. Singleton Pattern</h2>
-      <p><strong>Use when:</strong> Exactly one instance should exist globally.</p>
-      <p><strong>LLD examples:</strong> Logger, Config, Connection pool, Cache.</p>
-      <pre>{`class Logger {
-  private static instance: Logger;
-  private constructor() {}
-  static getInstance(): Logger {
-    if (!Logger.instance) Logger.instance = new Logger();
-    return Logger.instance;
-  }
-}`}</pre>
-      <p><strong>Interview warning:</strong> Don't overuse Singleton. Only use it when exactly one instance is genuinely required. Interviewers penalize excessive Singleton usage.</p>
+      <h2>9. Template Method Pattern</h2>
+      <p>
+        Define the skeleton of an algorithm in a base class, deferring some steps to subclasses.
+        Use when multiple classes share the same algorithm structure with different details.
+      </p>
+      <pre>{`public abstract class ReportGenerator {
+    // Template method — defines the algorithm skeleton
+    public final Report generate(String period) {
+        Data data = fetchData(period);   // step 1 — same for all
+        Data processed = process(data);  // step 2 — varies per subclass
+        return format(processed);        // step 3 — varies per subclass
+    }
 
-      <h2>8. Template Method Pattern</h2>
-      <p><strong>Use when:</strong> An algorithm has a fixed skeleton but some steps vary by subclass.</p>
-      <p><strong>LLD examples:</strong> Cancellation policy in Hotel booking, report generation, data export formats.</p>
-      <pre>{`abstract class BookingCancellation {
-  cancel(booking: Booking): void {
-    this.validateCancellation(booking);       // Fixed step
-    const refund = this.calculateRefund(booking); // Varies by type
-    this.processRefund(booking, refund);      // Fixed step
-  }
-  abstract calculateRefund(booking: Booking): number;
-}`}</pre>
-
-      <h2>9. Chain of Responsibility</h2>
-      <p><strong>Use when:</strong> A request passes through a series of handlers, each deciding to process or pass it on.</p>
-      <p><strong>LLD examples:</strong> ATM cash dispensing (₹500 → ₹200 → ₹100 notes), fraud detection pipeline, logging handlers, middleware.</p>
-      <pre>{`abstract class CashHandler {
-  protected next: CashHandler | null = null;
-  setNext(h: CashHandler): CashHandler { this.next = h; return h; }
-  abstract dispense(amount: number): void;
+    protected abstract Data process(Data raw);
+    protected abstract Report format(Data processed);
+    private Data fetchData(String period) { ... } // shared
 }
-class FiveHundredHandler extends CashHandler {
-  dispense(amount: number) {
-    const count = Math.floor(amount / 500);
-    if (count > 0) { console.log(\`Dispensing \${count} × ₹500\`); }
-    this.next?.dispense(amount % 500);
-  }
-}`}</pre>
 
-      <h2>10. Composite Pattern</h2>
-      <p><strong>Use when:</strong> You need to treat individual objects and groups of objects uniformly.</p>
-      <p><strong>LLD examples:</strong> Chat (1-on-1 and Group Chat share the same interface), file system (File and Folder), UI components.</p>
-      <pre>{`interface Chat {
-  sendMessage(msg: Message): void;
-  getParticipants(): User[];
+public class SalesReport extends ReportGenerator { ... }
+public class InventoryReport extends ReportGenerator { ... }`}</pre>
+      <p><strong>Where it appears:</strong> Notification System (send flow per channel), Report generation, Data import pipelines.</p>
+
+      <h2>10. Repository Pattern</h2>
+      <p>
+        Encapsulate data access logic behind a collection-like interface. Use to decouple business logic
+        from persistence concerns and to make services testable with mock repositories.
+      </p>
+      <pre>{`public interface BookRepository {
+    Optional<Book> findByIsbn(String isbn);
+    List<Book> findByAuthor(String author);
+    void save(Book book);
 }
-class DirectChat implements Chat { ... }   // 1-on-1
-class GroupChat  implements Chat { ... }   // N participants
-// TripService.notifyChat(chat: Chat) works for both ✓`}</pre>
 
-      <h2>Pattern Selection Cheatsheet</h2>
-      <ul>
-        <li>Multiple behaviors for one operation → <strong>Strategy</strong></li>
-        <li>React to state changes across objects → <strong>Observer</strong></li>
-        <li>Complex object states → <strong>State</strong></li>
-        <li>Create objects without specifying exact class → <strong>Factory</strong></li>
-        <li>Add behavior dynamically → <strong>Decorator</strong></li>
-        <li>Encapsulate operations as objects → <strong>Command</strong></li>
-        <li>Pass requests through handlers → <strong>Chain of Responsibility</strong></li>
-        <li>Fixed algorithm, varying steps → <strong>Template Method</strong></li>
-        <li>One instance globally → <strong>Singleton</strong></li>
-        <li>Treat individual and group uniformly → <strong>Composite</strong></li>
-      </ul>
+public class SqlBookRepository implements BookRepository { ... }     // production
+public class InMemoryBookRepository implements BookRepository { ... } // tests
+
+// LibraryService depends on the interface, not the implementation
+public class LibraryService {
+    private final BookRepository bookRepo;
+    public LibraryService(BookRepository repo) { this.bookRepo = repo; }
+}`}</pre>
+      <p><strong>Where it appears:</strong> Every LLD problem — BookRepository, OrderRepository, TicketRepository, UserRepository.</p>
+
+      <h2>Pattern Selection Quick Guide</h2>
+      <pre>{`Problem Symptom                      | Use This Pattern
+------------------------------------ | ----------------
+Multiple algorithms, same interface  | Strategy
+React to events across classes       | Observer
+Create objects based on runtime type | Factory
+One instance across entire app       | Singleton
+Object behavior changes with state   | State
+Log, queue, or undo an operation     | Command
+Sequential processing pipeline       | Chain of Responsibility
+Add behavior without changing class  | Decorator
+Same algorithm, different details    | Template Method
+Decouple DB access from business     | Repository`}</pre>
+
+      <h2>FAQ — Design Patterns for LLD Interviews</h2>
+
+      <h3>Which design pattern is most commonly asked in LLD interviews?</h3>
+      <p>
+        Strategy pattern appears in almost every LLD problem — pricing, split types, rate limiting
+        algorithms, assignment strategies, notification channels. If you master one pattern for LLD
+        interviews, make it Strategy. Observer is a close second, appearing wherever real-time updates
+        or event notifications are required.
+      </p>
+
+      <h3>What is the difference between Strategy and Template Method?</h3>
+      <p>
+        Strategy uses composition — the varying algorithm is a separate object injected into the context.
+        Template Method uses inheritance — the varying steps are abstract methods in the base class.
+        Strategy is more flexible (swap at runtime) and more testable (mock the strategy). Template
+        Method is simpler but couples the variant to the base class through inheritance.
+      </p>
+
+      <h3>When should you use Factory vs Constructor directly?</h3>
+      <p>
+        Use a Factory when: the type of object to create depends on runtime data, creation involves
+        complex logic, or you want to centralize creation to make future changes easier. Use a constructor
+        directly for simple objects where the caller knows the exact type and there is no creation
+        complexity.
+      </p>
+
+      <h3>How do you explain the Chain of Responsibility to an interviewer?</h3>
+      <p>
+        "I have a sequence of checks that must run in order before processing a payment. Each check is
+        independent — fraud check does not know about limit check. If any check rejects the payment, it
+        short-circuits. Chain of Responsibility lets me add, remove, or reorder checks without changing
+        the payment processing logic."
+      </p>
     </>
   );
 }

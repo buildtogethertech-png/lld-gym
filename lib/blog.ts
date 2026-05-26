@@ -11,8 +11,8 @@ export interface BlogPost {
 export const BLOG_POSTS: BlogPost[] = [
   {
     slug: "parking-lot-lld-design",
-    title: "How to Design a Parking Lot System | LLD Interview Guide",
-    description: "Step-by-step breakdown of the Parking Lot LLD problem — entities, class diagram, Strategy pattern for pricing, and what interviewers look for at Amazon, Flipkart.",
+    title: "Parking Lot Low Level Design — Complete LLD Interview Guide",
+    description: "Complete Parking Lot LLD solution — class diagram, Strategy pattern for pricing, Java code, and what interviewers look for at Amazon, Flipkart. 1500+ word guide.",
     date: "2025-04-01",
     tags: ["lld", "oop", "strategy-pattern", "state-machine"],
     problemId: "parking-lot",
@@ -20,8 +20,8 @@ export const BLOG_POSTS: BlogPost[] = [
   },
   {
     slug: "ride-sharing-lld-design",
-    title: "How to Design Uber / Ride Sharing | LLD Interview Guide",
-    description: "Design a ride sharing system like Uber or Ola. Driver matching, fare calculation, trip state machine, and real interview patterns used at Uber, Ola, Swiggy.",
+    title: "Ride Sharing Low Level Design (Uber/Ola) — LLD Interview Guide",
+    description: "Complete Uber / ride sharing LLD solution — driver matching, fare calculation, trip state machine, class diagram and Java code. Asked at Uber, Ola, Swiggy interviews.",
     date: "2025-04-02",
     tags: ["lld", "state-machine", "factory", "observer"],
     problemId: "ride-sharing",
@@ -29,7 +29,7 @@ export const BLOG_POSTS: BlogPost[] = [
   },
   {
     slug: "movie-ticket-booking-lld",
-    title: "How to Design BookMyShow (Movie Ticket Booking) | LLD Guide",
+    title: "Movie Ticket Booking Low Level Design (BookMyShow) — LLD Guide",
     description: "Design a movie ticket booking system with concurrent seat booking, seat locking, pricing strategy, and payment flow — asked at Swiggy, Razorpay, BookMyShow interviews.",
     date: "2025-04-03",
     tags: ["lld", "concurrency", "state-machine", "strategy"],
@@ -38,7 +38,7 @@ export const BLOG_POSTS: BlogPost[] = [
   },
   {
     slug: "elevator-system-lld-design",
-    title: "How to Design an Elevator System | LLD Interview Guide",
+    title: "Elevator System Low Level Design — Complete LLD Interview Guide",
     description: "Design a multi-elevator control system with optimal assignment, SCAN algorithm, and State pattern. Detailed class breakdown for advanced LLD rounds.",
     date: "2025-04-04",
     tags: ["lld", "state-machine", "command-pattern"],
@@ -47,7 +47,7 @@ export const BLOG_POSTS: BlogPost[] = [
   },
   {
     slug: "url-shortener-lld-design",
-    title: "How to Design a URL Shortener (bit.ly) | LLD Interview Guide",
+    title: "URL Shortener Low Level Design (bit.ly) — LLD Interview Guide",
     description: "Design a URL shortening service with Base62 encoding, custom aliases, TTL, and click analytics. Common in Google, Microsoft, and startup LLD rounds.",
     date: "2025-04-05",
     tags: ["lld", "hashing", "analytics", "oop"],
@@ -56,7 +56,7 @@ export const BLOG_POSTS: BlogPost[] = [
   },
   {
     slug: "chat-application-lld-design",
-    title: "How to Design a Chat Application (WhatsApp) | LLD Guide",
+    title: "Chat Application Low Level Design (WhatsApp) — LLD Interview Guide",
     description: "Design a WhatsApp-like messaging system — 1-on-1 chats, group chats, message status, Observer pattern for real-time delivery. Common at Slack, Meta, and Zomato.",
     date: "2025-04-06",
     tags: ["lld", "observer", "composite-pattern"],
@@ -65,7 +65,7 @@ export const BLOG_POSTS: BlogPost[] = [
   },
   {
     slug: "food-delivery-lld-design",
-    title: "How to Design a Food Delivery System (Swiggy/Zomato) | LLD Guide",
+    title: "Food Delivery System Low Level Design (Swiggy/Zomato) — LLD Guide",
     description: "Design Swiggy or Zomato's core system — restaurant browse, order placement, delivery partner assignment, and real-time tracking. Frequently asked at Swiggy interviews.",
     date: "2025-04-07",
     tags: ["lld", "observer", "factory", "strategy"],
@@ -74,7 +74,7 @@ export const BLOG_POSTS: BlogPost[] = [
   },
   {
     slug: "library-management-lld-design",
-    title: "How to Design a Library Management System | LLD Interview Guide",
+    title: "Library Management System Low Level Design — LLD Interview Guide",
     description: "Design a library system with book borrowing, fine calculation, and notifications. Classic beginner LLD problem asked in entry-level SDE interviews.",
     date: "2025-04-08",
     tags: ["lld", "oop", "observer"],
@@ -83,16 +83,16 @@ export const BLOG_POSTS: BlogPost[] = [
   },
   {
     slug: "atm-machine-lld-design",
-    title: "How to Design an ATM Machine | LLD Interview Guide",
-    description: "Design an ATM system with PIN authentication, State pattern, and cash dispensing via Chain of Responsibility. Asked at banks and fintech companies.",
+    title: "ATM Machine Low Level Design — Complete LLD Interview Guide",
+    description: "Complete ATM machine LLD solution — State pattern, Chain of Responsibility for cash dispensing, Java code, class diagram and FAQ. Asked at Paytm, PhonePe, Razorpay.",
     date: "2025-04-09",
     tags: ["lld", "state-pattern", "chain-of-responsibility"],
     problemId: "atm-machine",
-    readingTime: 8,
+    readingTime: 15,
   },
   {
     slug: "notification-system-lld-design",
-    title: "How to Design a Notification System | LLD Interview Guide",
+    title: "Notification System Low Level Design — LLD Interview Guide",
     description: "Design a multi-channel notification service (Email, SMS, Push, In-App) with rate limiting, retry logic, and user preferences. Common at Razorpay, PhonePe.",
     date: "2025-04-10",
     tags: ["lld", "observer", "strategy", "template-method"],
@@ -101,7 +101,7 @@ export const BLOG_POSTS: BlogPost[] = [
   },
   {
     slug: "lru-cache-lld-design",
-    title: "How to Design an LRU Cache System | LLD Interview Guide",
+    title: "LRU Cache Low Level Design — Complete LLD Interview Guide",
     description: "Design an LRU cache with O(1) get/set using Doubly Linked List + HashMap, TTL support, and thread safety. Extremely common at FAANG interviews.",
     date: "2025-04-11",
     tags: ["lld", "data-structures", "concurrency"],
@@ -110,7 +110,7 @@ export const BLOG_POSTS: BlogPost[] = [
   },
   {
     slug: "payment-gateway-lld-design",
-    title: "How to Design a Payment Gateway | LLD Interview Guide",
+    title: "Payment Gateway Low Level Design — Complete LLD Interview Guide",
     description: "Design a payment processing system with idempotency, multiple payment methods, fraud detection hooks, and webhook notifications. Core topic at Razorpay, PayU.",
     date: "2025-04-12",
     tags: ["lld", "strategy", "chain-of-responsibility", "observer"],
@@ -119,7 +119,7 @@ export const BLOG_POSTS: BlogPost[] = [
   },
   {
     slug: "rate-limiter-lld-design",
-    title: "How to Design a Rate Limiter | LLD Interview Guide",
+    title: "Rate Limiter Low Level Design — Token Bucket, Sliding Window LLD Guide",
     description: "Design a rate limiter with Token Bucket, Sliding Window, and Fixed Window algorithms. Strategy pattern, distributed state, and burst handling explained.",
     date: "2025-04-13",
     tags: ["lld", "strategy", "distributed-systems"],
@@ -128,7 +128,7 @@ export const BLOG_POSTS: BlogPost[] = [
   },
   {
     slug: "expense-splitter-lld-design",
-    title: "How to Design Splitwise (Expense Splitter) | LLD Guide",
+    title: "Splitwise Low Level Design — Expense Splitter LLD Interview Guide",
     description: "Design a Splitwise-like app with equal, exact, and percentage splits, balance tracking, and debt simplification algorithm. Asked at fintech SDE interviews.",
     date: "2025-04-14",
     tags: ["lld", "oop", "graph-algorithm", "strategy"],
@@ -137,7 +137,7 @@ export const BLOG_POSTS: BlogPost[] = [
   },
   {
     slug: "social-media-feed-lld",
-    title: "How to Design a Social Media Feed (Twitter/Instagram) | LLD Guide",
+    title: "Social Media Feed Low Level Design (Twitter/Instagram) — LLD Guide",
     description: "Design a Twitter or Instagram feed with posts, follows, fan-out strategies, trending hashtags, and notification system. Advanced LLD for senior SDE rounds.",
     date: "2025-04-15",
     tags: ["lld", "observer", "fan-out", "strategy"],
@@ -146,7 +146,7 @@ export const BLOG_POSTS: BlogPost[] = [
   },
   {
     slug: "job-scheduler-lld-design",
-    title: "How to Design a Distributed Job Scheduler | LLD Interview Guide",
+    title: "Job Scheduler Low Level Design — Distributed Cron LLD Interview Guide",
     description: "Design a job scheduling system with cron support, priority queues, retry with backoff, and distributed workers. Senior-level LLD problem at Amazon, Flipkart.",
     date: "2025-04-16",
     tags: ["lld", "distributed-systems", "command-pattern", "observer"],
@@ -155,7 +155,7 @@ export const BLOG_POSTS: BlogPost[] = [
   },
   {
     slug: "hotel-booking-lld-design",
-    title: "How to Design a Hotel Booking System (OYO) | LLD Guide",
+    title: "Hotel Booking System Low Level Design (OYO) — LLD Interview Guide",
     description: "Design a hotel booking platform with room availability, dynamic pricing, cancellation policy, and concurrent reservation safety. Common in product-based SDE rounds.",
     date: "2025-04-17",
     tags: ["lld", "strategy", "template-method", "state-machine"],
@@ -164,7 +164,7 @@ export const BLOG_POSTS: BlogPost[] = [
   },
   {
     slug: "inventory-management-lld-design",
-    title: "How to Design an Inventory Management System | LLD Guide",
+    title: "Inventory Management System Low Level Design — LLD Interview Guide",
     description: "Design a warehouse inventory system with stock reservation, audit trail, multi-warehouse transfers, and auto reorder. Asked at Amazon, Flipkart SDE interviews.",
     date: "2025-04-18",
     tags: ["lld", "command-pattern", "observer"],
@@ -173,7 +173,7 @@ export const BLOG_POSTS: BlogPost[] = [
   },
   {
     slug: "event-ticketing-lld-design",
-    title: "How to Design an Event Ticketing System (Ticketmaster) | LLD",
+    title: "Event Ticketing System Low Level Design (Ticketmaster) — LLD Guide",
     description: "Design a high-concurrency ticket booking system with seat holds, waiting lists, dynamic pricing, and overselling prevention. Advanced LLD for senior engineers.",
     date: "2025-04-19",
     tags: ["lld", "concurrency", "observer", "strategy"],
@@ -182,7 +182,7 @@ export const BLOG_POSTS: BlogPost[] = [
   },
   {
     slug: "logger-framework-lld-design",
-    title: "How to Design a Logging Framework | LLD Interview Guide",
+    title: "Logger System Low Level Design — Logging Framework LLD Guide",
     description: "Design a flexible logging system with multiple handlers, formatters, and log levels. Chain of Responsibility, Singleton, and Observer patterns explained.",
     date: "2025-04-20",
     tags: ["lld", "chain-of-responsibility", "singleton", "observer"],
