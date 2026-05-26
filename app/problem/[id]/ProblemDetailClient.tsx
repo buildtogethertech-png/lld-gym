@@ -97,6 +97,7 @@ export default function ProblemDetailClient({ problem, isLocked, isPaid }: { pro
   const [evaluating, setEvaluating] = useState(false);
   const [evalResult, setEvalResult] = useState<EvalResult | null>(null);
   const [showShareModal, setShowShareModal] = useState(false);
+  const evalPanelRef = useRef<HTMLDivElement>(null);
   const [evalError, setEvalError] = useState<string | null>(null);
   const [evalErrorCode, setEvalErrorCode] = useState<string | null>(null);
   const [language, setLanguage] = useState<LangId>("java");
@@ -237,6 +238,7 @@ export default function ProblemDetailClient({ problem, isLocked, isPaid }: { pro
     if (!res.ok) { setEvalError(data.error ?? "Evaluation failed"); setEvalErrorCode(data.code ?? null); return; }
     setEvalResult(data as EvalResult);
     if (localStorage.getItem("lldhub_share_dismissed") !== "1") setShowShareModal(true);
+    setTimeout(() => evalPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
     const total = (data as EvalResult).total;
     setScore(total);
     setCompleted(total >= AUTO_COMPLETE_MIN_SCORE);
@@ -436,7 +438,9 @@ export default function ProblemDetailClient({ problem, isLocked, isPaid }: { pro
                 )}
 
                 {evalResult && (
-                  <EvaluationPanel result={evalResult} onClose={() => setEvalResult(null)} />
+                  <div ref={evalPanelRef}>
+                    <EvaluationPanel result={evalResult} onClose={() => setEvalResult(null)} />
+                  </div>
                 )}
               </div>
             )}
