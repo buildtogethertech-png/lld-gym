@@ -9,6 +9,7 @@ import { Problem } from "@/lib/types";
 import type { EvalResult } from "@/app/api/evaluate/route";
 import EvaluationPanel from "@/components/EvaluationPanel";
 import ShareModal from "@/components/ShareModal";
+import CommunitySolutions from "@/components/CommunitySolutions";
 import UpgradeButton from "@/components/UpgradeButton";
 import { generateStarterCode } from "@/lib/starter-code";
 import { AUTO_COMPLETE_MIN_SCORE } from "@/lib/eval-completion";
@@ -105,7 +106,7 @@ export default function ProblemDetailClient({ problem, isLocked, isPaid }: { pro
   const [rightMode, setRightMode] = useState<"code" | "uml">("code");
   const [umlFullscreen, setUmlFullscreen] = useState(false);
   const [topBarHidden, setTopBarHidden] = useState(false);
-  const [leftTab, setLeftTab] = useState<"description" | "submissions">("description");
+  const [leftTab, setLeftTab] = useState<"description" | "submissions" | "community">("description");
 
   interface SubLog {
     id: string;
@@ -324,19 +325,26 @@ export default function ProblemDetailClient({ problem, isLocked, isPaid }: { pro
 
           {/* Tab bar */}
           <div className="shrink-0 flex border-b border-gray-800 bg-[#161616] pl-2 sm:pl-3 lg:pl-4">
-            {(["description", "submissions"] as const).map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setLeftTab(tab)}
-                className={`px-3 sm:px-4 py-2.5 text-xs font-medium capitalize transition-colors border-b-2 -mb-px ${
-                  leftTab === tab
-                    ? "border-yellow-400 text-yellow-400"
-                    : "border-transparent text-gray-500 hover:text-gray-300"
-                }`}
-              >
-                {tab === "submissions" ? `Submissions${subLogs.length > 0 ? ` (${subLogs.length})` : ""}` : "Description"}
-              </button>
-            ))}
+            <button
+              onClick={() => setLeftTab("description")}
+              className={`px-3 sm:px-4 py-2.5 text-xs font-medium transition-colors border-b-2 -mb-px ${leftTab === "description" ? "border-yellow-400 text-yellow-400" : "border-transparent text-gray-500 hover:text-gray-300"}`}
+            >
+              Description
+            </button>
+            <button
+              onClick={() => setLeftTab("submissions")}
+              className={`px-3 sm:px-4 py-2.5 text-xs font-medium transition-colors border-b-2 -mb-px ${leftTab === "submissions" ? "border-yellow-400 text-yellow-400" : "border-transparent text-gray-500 hover:text-gray-300"}`}
+            >
+              {`Submissions${subLogs.length > 0 ? ` (${subLogs.length})` : ""}`}
+            </button>
+            <button
+              onClick={() => setLeftTab("community")}
+              className={`px-3 sm:px-4 py-2.5 text-xs font-medium transition-colors border-b-2 -mb-px flex items-center gap-1 ${leftTab === "community" ? "border-yellow-400 text-yellow-400" : "border-transparent text-gray-500 hover:text-gray-300"}`}
+            >
+              {score !== null && score >= 80
+                ? "Community"
+                : <><svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>Community</>}
+            </button>
           </div>
 
           {/* Content */}
@@ -551,6 +559,18 @@ export default function ProblemDetailClient({ problem, isLocked, isPaid }: { pro
                   );
                 })}
               </div>
+            )}
+
+            {/* ── Community tab ── */}
+            {leftTab === "community" && (
+              <CommunitySolutions
+                problemId={problem.id}
+                myScore={score}
+                onCopyToEditor={(code) => {
+                  setAnswer(code);
+                  setRightMode("code");
+                }}
+              />
             )}
           </div>
         </div>
