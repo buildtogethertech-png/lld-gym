@@ -59,6 +59,7 @@ model User {
   utmSource  String?
   utmMedium  String?
   utmCampaign String?
+  emailUnsubscribed Boolean @default(false)
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
 

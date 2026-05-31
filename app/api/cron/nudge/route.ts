@@ -4,6 +4,7 @@ import fs from "fs";
 import path from "path";
 import { NUDGE_SCHEDULE, NUDGE_CUTOFF_DAYS } from "@/lib/nudge-config";
 import { sendHtmlMail } from "@/lib/mailer";
+import { unsubscribeUrl } from "@/lib/unsubscribe-token";
 
 // Protect cron endpoint — only callable with the secret
 function isAuthorized(req: NextRequest) {
@@ -11,11 +12,12 @@ function isAuthorized(req: NextRequest) {
   return auth === `Bearer ${process.env.CRON_SECRET}`;
 }
 
-function loadTemplate(filename: string, name: string, days: number): string {
+function loadTemplate(filename: string, name: string, days: number, unsub: string): string {
   const filePath = path.join(process.cwd(), "emails", filename);
   let html = fs.readFileSync(filePath, "utf-8");
   html = html.replace(/Gaurav/g, name || "there");
   html = html.replace(/\{\{days\}\}/g, String(days));
+  html = html.replace(/\{\{unsubscribe_url\}\}/g, unsub);
   return html;
 }
 
@@ -42,6 +44,7 @@ export async function GET(req: NextRequest) {
 
     // All registered users — no submission required
     const users = await prisma.user.findMany({
+      where: { emailUnsubscribed: false },
       select: {
         id: true,
         name: true,
@@ -57,16 +60,15 @@ export async function GET(req: NextRequest) {
     });
 
     for (const user of users) {
-      // Use last submission date if exists, otherwise fall back to account creation date
       const lastAt = user.submissions[0]
         ? new Date(user.submissions[0].updatedAt)
         : new Date(user.createdAt);
 
-      // Check if their last activity falls in this day window
       if (lastAt >= windowStart && lastAt < windowEnd) {
         const template = user.isPaid ? interval.templatePaid : interval.templateFree;
         const firstName = user.name?.split(" ")[0] ?? "there";
-        const html = loadTemplate(template, firstName, interval.day);
+        const unsubLink = unsubscribeUrl(user.id);
+        const html = loadTemplate(template, firstName, interval.day, unsubLink);
 
         await sendEmail(user.email, interval.subject, html);
         results.push({ email: user.email, day: interval.day, isPaid: user.isPaid });
