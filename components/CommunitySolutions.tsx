@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import type { EvalResult, EvalCategory } from "@/app/api/evaluate/route";
 
 interface Solution {
@@ -146,7 +147,7 @@ function SolutionCard({ solution, onCopyToEditor }: { solution: Solution; onCopy
 }
 
 export default function CommunitySolutions({ problemId, myScore, onCopyToEditor }: Props) {
-  const [data, setData] = useState<{ locked: boolean; solutions?: Solution[]; requiredScore?: number } | null>(null);
+  const [data, setData] = useState<{ locked: boolean; solutions?: Solution[]; requiredScore?: number; myHidden?: boolean } | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -209,6 +210,15 @@ export default function CommunitySolutions({ problemId, myScore, onCopyToEditor 
       {data.solutions.map((s) => (
         <SolutionCard key={s.id} solution={s} onCopyToEditor={onCopyToEditor} />
       ))}
+
+      <div className="pt-2 text-center">
+        <Link
+          href="/settings"
+          className="text-xs text-gray-600 hover:text-gray-400 transition-colors"
+        >
+          {data.myHidden ? "Your solution is hidden · change in settings" : "Don't want to show your solution? Settings →"}
+        </Link>
+      </div>
     </div>
   );
 }

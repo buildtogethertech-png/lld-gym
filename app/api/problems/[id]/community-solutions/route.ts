@@ -11,22 +11,29 @@ export async function GET(
   const uid = await getUid();
   if (!uid) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  // Check if this user has scored 80+ on this problem
-  const mySubmission = await prisma.submission.findUnique({
-    where: { userId_problemId: { userId: uid, problemId: params.id } },
-    select: { score: true },
-  });
+  // Check if this user has scored 80+ on this problem + get their privacy setting
+  const [mySubmission, myPrefs] = await Promise.all([
+    prisma.submission.findUnique({
+      where: { userId_problemId: { userId: uid, problemId: params.id } },
+      select: { score: true },
+    }),
+    prisma.user.findUnique({
+      where: { id: uid },
+      select: { hideSolutionFromCommunity: true },
+    }),
+  ]);
 
   if (!mySubmission || (mySubmission.score ?? 0) < UNLOCK_SCORE) {
     return NextResponse.json({ locked: true, requiredScore: UNLOCK_SCORE });
   }
 
-  // Fetch all submissions >= 80 for this problem, excluding current user
+  // Fetch all submissions >= 80, excluding current user and users who opted out
   const solutions = await prisma.submission.findMany({
     where: {
       problemId: params.id,
       score: { gte: UNLOCK_SCORE },
       userId: { not: uid },
+      user: { hideSolutionFromCommunity: false },
     },
     select: {
       id: true,
@@ -40,5 +47,9 @@ export async function GET(
     take: 50,
   });
 
-  return NextResponse.json({ locked: false, solutions });
+  return NextResponse.json({
+    locked: false,
+    solutions,
+    myHidden: myPrefs?.hideSolutionFromCommunity ?? false,
+  });
 }

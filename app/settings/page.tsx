@@ -558,6 +558,119 @@ function SettingsPageInner() {
           )}
         </div>
       )}
+
+      {/* Email notifications */}
+      <EmailNotificationSection />
+    </div>
+  );
+}
+
+function EmailNotificationSection() {
+  const [unsubscribed, setUnsubscribed] = useState<boolean | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/user/email-prefs")
+      .then((r) => r.json())
+      .then((d) => setUnsubscribed(d.emailUnsubscribed ?? false))
+      .catch(() => {});
+  }, []);
+
+  async function toggle() {
+    if (unsubscribed === null) return;
+    setSaving(true);
+    const next = !unsubscribed;
+    await fetch("/api/user/email-prefs", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ emailUnsubscribed: next }),
+    });
+    setUnsubscribed(next);
+    setSaving(false);
+  }
+
+  if (unsubscribed === null) return null;
+
+  return (
+    <div className="mt-6 border border-gray-800 rounded-xl p-5">
+      <h2 className="text-sm font-semibold text-gray-200 mb-1">Email notifications</h2>
+      <p className="text-xs text-gray-500 mb-4">
+        If you don&apos;t want to learn Low Level Design anymore, turn this off.
+      </p>
+      <div className="flex items-center justify-between mb-4">
+        <span className="text-sm text-gray-300">
+          {unsubscribed ? "Reminders are off" : "Reminders are on"}
+        </span>
+        <button
+          onClick={toggle}
+          disabled={saving}
+          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+            unsubscribed ? "bg-gray-700" : "bg-yellow-400"
+          }`}
+        >
+          <span
+            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+              unsubscribed ? "translate-x-1" : "translate-x-6"
+            }`}
+          />
+        </button>
+      </div>
+
+      <div className="border-t border-gray-800 pt-4">
+        <h2 className="text-sm font-semibold text-gray-200 mb-1">Community solutions</h2>
+        <p className="text-xs text-gray-500 mb-4">
+          When off, your solutions won&apos;t appear in other users&apos; community tab.
+        </p>
+        <CommunityPrivacyToggle />
+      </div>
+    </div>
+  );
+}
+
+function CommunityPrivacyToggle() {
+  const [hidden, setHidden] = useState<boolean | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/user/community-privacy")
+      .then((r) => r.json())
+      .then((d) => setHidden(d.hideSolutionFromCommunity ?? false))
+      .catch(() => {});
+  }, []);
+
+  async function toggle() {
+    if (hidden === null) return;
+    setSaving(true);
+    const next = !hidden;
+    await fetch("/api/user/community-privacy", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ hideSolutionFromCommunity: next }),
+    });
+    setHidden(next);
+    setSaving(false);
+  }
+
+  if (hidden === null) return null;
+
+  return (
+    <div className="flex items-center justify-between">
+      <span className="text-sm text-gray-300">
+        {hidden ? "Solution hidden from community" : "Solution visible in community"}
+      </span>
+      <button
+        onClick={toggle}
+        disabled={saving}
+        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+          hidden ? "bg-gray-700" : "bg-yellow-400"
+        }`}
+      >
+        <span
+          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+            hidden ? "translate-x-1" : "translate-x-6"
+          }`}
+        />
+      </button>
     </div>
   );
 }
