@@ -61,7 +61,7 @@ function replyToHeader(): string | undefined {
   return process.env.EMAIL_REPLY_TO?.trim() || undefined;
 }
 
-async function sendHtmlMail(opts: {
+export async function sendHtmlMail(opts: {
   to: string | string[];
   subject: string;
   html: string;

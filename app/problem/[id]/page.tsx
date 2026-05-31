@@ -70,7 +70,7 @@ export default async function ProblemPage({ params }: { params: { id: string } }
     }
   }
 
-  const isLocked = !problem.free && !isPaid;
+  const isLocked = false; // all problems open — paywall removed for growth
 
   const jsonLd = {
     "@context": "https://schema.org",
