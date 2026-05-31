@@ -40,17 +40,13 @@ interface Props {
 export default function ProblemCard({ problem, completed, score, index, isPaid }: Props) {
   const diffColor = DIFFICULTY_COLORS[problem.difficulty] ?? "text-gray-400 bg-gray-400/10";
   const diffLabel = DIFFICULTY_LABEL[problem.difficulty] ?? "Unknown";
-  const isLocked = !problem.free && !isPaid;
-
   return (
     <Link href={`/problem/${problem.id}`}>
       <div
         className={`group flex items-center gap-4 p-4 rounded-xl border transition-all cursor-pointer
-          ${isLocked
-            ? "border-gray-800/50 bg-gray-900/30 opacity-60 hover:opacity-80"
-            : completed
-              ? "border-green-800/50 bg-green-900/10 hover:border-green-700"
-              : "border-gray-800 bg-gray-900/50 hover:border-gray-600"
+          ${completed
+            ? "border-green-800/50 bg-green-900/10 hover:border-green-700"
+            : "border-gray-800 bg-gray-900/50 hover:border-gray-600"
           }`}
       >
         {/* Index */}
@@ -58,13 +54,7 @@ export default function ProblemCard({ problem, completed, score, index, isPaid }
 
         {/* Status dot */}
         <div className="shrink-0">
-          {isLocked ? (
-            <div className="w-6 h-6 rounded-full border border-gray-700 flex items-center justify-center">
-              <svg className="w-3 h-3 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-              </svg>
-            </div>
-          ) : completed ? (
+          {completed ? (
             <div className="w-6 h-6 rounded-full bg-green-500/20 border border-green-500 flex items-center justify-center">
               <svg className="w-3 h-3 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
