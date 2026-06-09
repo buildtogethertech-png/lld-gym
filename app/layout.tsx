@@ -7,13 +7,17 @@ import FeedbackButton from "@/components/FeedbackButton";
 import UTMCapture from "@/components/UTMCapture";
 
 export const metadata: Metadata = {
-  title: "LLD Hub — Low Level Design Interview Practice",
+  title: "Practice Low Level Design Problems | LLDHub",
   description:
-    "Practice low-level design interview questions with AI-powered evaluation. OOP, SOLID principles, design patterns, and real LLD problems asked at Amazon, Flipkart, Swiggy, and more.",
+    "Practice low level design interview problems on LLDHub — in-browser code editor with AI evaluation. 20+ LLD problems — parking lot, ride sharing, chess game and more. Asked at Amazon, Flipkart, Swiggy, Uber.",
   keywords: [
+    "lldhub",
+    "lld hub",
+    "practice low level design",
+    "low level design problems",
+    "lld practice problems",
     "lld interview questions",
     "low level design interview",
-    "lld practice problems",
     "system design lld",
     "object oriented design interview",
     "design patterns interview",
@@ -21,21 +25,22 @@ export const metadata: Metadata = {
     "lld coding questions",
     "amazon lld interview",
     "flipkart low level design",
+    "low level design questions java",
   ],
   metadataBase: new URL("https://lldhub.in"),
   openGraph: {
-    title: "LLD Hub — Low Level Design Interview Practice",
+    title: "Practice Low Level Design Problems | LLDHub",
     description:
-      "AI-scored LLD problems. OOP, SOLID, design patterns — practice like a real interview.",
+      "20+ LLD problems with AI evaluation. Practice parking lot, ride sharing, chess game and more — asked at top product companies.",
     url: "https://lldhub.in",
-    siteName: "LLD Hub",
+    siteName: "LLDHub",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "LLD Hub — Low Level Design Interview Practice",
+    title: "Practice Low Level Design Problems | LLDHub",
     description:
-      "AI-scored LLD problems. OOP, SOLID, design patterns — practice like a real interview.",
+      "20+ LLD problems with AI evaluation. Practice parking lot, ride sharing, chess game and more — asked at top product companies.",
   },
   alternates: {
     canonical: "https://lldhub.in",

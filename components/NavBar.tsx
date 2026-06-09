@@ -13,7 +13,7 @@ export default function NavBar() {
       <div className="w-full h-14 flex items-center justify-between px-3 sm:px-4 lg:px-5">
         <Link href="/" className="flex items-center gap-2 font-bold text-lg tracking-tight">
           <span className="text-yellow-400">⚡</span>
-          <span>LLD Hub</span>
+          <span>LLDHub</span>
         </Link>
 
         <div className="flex items-center gap-3">
