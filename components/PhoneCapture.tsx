@@ -41,9 +41,9 @@ export default function PhoneCapture() {
     <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm p-4">
       <div className="w-full max-w-md bg-[#161616] border border-gray-800 rounded-2xl shadow-2xl overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-800">
-          <p className="font-semibold text-gray-100 text-sm">Add your mobile number</p>
+          <p className="font-semibold text-gray-100 text-sm">Finish setting up your account</p>
           <p className="text-xs text-gray-500 mt-1">
-            Required to use LLD Hub. We use this for LLD tips and interview prep.
+            Add a mobile number to complete your account.
           </p>
         </div>
 

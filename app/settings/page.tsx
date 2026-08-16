@@ -593,7 +593,7 @@ function WhatsAppNumberSection() {
     <div className="mt-6 border border-gray-800 rounded-xl p-5">
       <h2 className="text-sm font-semibold text-gray-200 mb-1">Mobile number</h2>
       <p className="text-xs text-gray-500 mb-4">
-        Required. We use this for LLD tips and interview prep.
+        Kept on your account so we can reach you if something goes wrong. Not used for marketing.
       </p>
       {current && !editing && (
         <div className="flex items-center justify-between mb-3">

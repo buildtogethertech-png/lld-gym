@@ -94,10 +94,10 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <span className="text-4xl">⚡</span>
-          <h1 className="text-2xl font-bold mt-3">{needPhone ? "Add your mobile number" : "Welcome back"}</h1>
+          <h1 className="text-2xl font-bold mt-3">{needPhone ? "Finish signing in" : "Welcome back"}</h1>
           <p className="text-gray-500 text-sm mt-1">
             {needPhone
-              ? "Required to continue. We use this for LLD tips and interview prep."
+              ? "Add a mobile number to complete your account. We only use it if we need to reach you about your account — never for marketing."
               : "Sign in to continue your LLD practice"}
           </p>
         </div>
