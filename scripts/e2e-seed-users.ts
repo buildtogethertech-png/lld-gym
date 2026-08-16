@@ -34,6 +34,7 @@ async function main() {
       isPaid: true,
       planId: paidPlan.id,
       planExpiry,
+      phone: "+919876543210",
     },
     update: {
       password: hash,
@@ -41,6 +42,7 @@ async function main() {
       isPaid: true,
       planId: paidPlan.id,
       planExpiry,
+      phone: "+919876543210",
     },
   });
   console.log("✓", PAID_EMAIL, "→ paid plan", paidPlan.slug);
@@ -55,6 +57,7 @@ async function main() {
       isPaid: false,
       planId: freePlan.id,
       planExpiry: null,
+      phone: "+919876543211",
     },
     update: {
       password: hash,
@@ -62,6 +65,7 @@ async function main() {
       isPaid: false,
       planId: freePlan.id,
       planExpiry: null,
+      phone: "+919876543211",
     },
   });
   console.log("✓", FREE_EMAIL, "→ free plan", freePlan.slug);

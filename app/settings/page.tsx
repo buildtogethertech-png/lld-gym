@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { SHOW_USER_OWN_API_KEY_UI } from "@/lib/features";
+import PhoneField from "@/components/PhoneField";
 
 interface ModelOption { id: string; name: string; }
 type TestStatus = "idle" | "testing" | "ok" | "fail";
@@ -559,8 +560,83 @@ function SettingsPageInner() {
         </div>
       )}
 
+      <WhatsAppNumberSection />
+
       {/* Email notifications */}
       <EmailNotificationSection />
+    </div>
+  );
+}
+
+function WhatsAppNumberSection() {
+  const [current, setCurrent] = useState("");
+  const [loaded, setLoaded] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [communityUrl, setCommunityUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/user/phone")
+      .then((r) => r.json())
+      .then((d) => {
+        setCurrent((d.phone ?? "").replace(/^\+91/, ""));
+        setCommunityUrl(d.communityUrl ?? null);
+        setEditing(!d.phone);
+        setLoaded(true);
+      })
+      .catch(() => setLoaded(true));
+  }, []);
+
+  if (!loaded) return null;
+
+  return (
+    <div className="mt-6 border border-gray-800 rounded-xl p-5">
+      <h2 className="text-sm font-semibold text-gray-200 mb-1">Mobile number</h2>
+      <p className="text-xs text-gray-500 mb-4">
+        Required. We use this for LLD tips and interview prep.
+      </p>
+      {current && !editing && (
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-sm text-gray-200 font-mono">+91 {current}</p>
+          <button
+            type="button"
+            onClick={() => {
+              setEditing(true);
+              setSaved(false);
+            }}
+            className="text-xs text-yellow-400 hover:text-yellow-300"
+          >
+            Change
+          </button>
+        </div>
+      )}
+      {editing && (
+        <PhoneField
+          initialPhone={current}
+          onSaved={() => {
+            fetch("/api/user/phone")
+              .then((r) => r.json())
+              .then((d) => {
+                setCurrent((d.phone ?? "").replace(/^\+91/, ""));
+                setCommunityUrl(d.communityUrl ?? null);
+              })
+              .catch(() => {});
+            setSaved(true);
+            setEditing(false);
+          }}
+        />
+      )}
+      {saved && <p className="text-xs text-green-400 mt-3">Number saved.</p>}
+      {communityUrl && (
+        <a
+          href={communityUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block text-xs text-[#25D366] hover:underline mt-3"
+        >
+          Join the LLDHub WhatsApp community →
+        </a>
+      )}
     </div>
   );
 }

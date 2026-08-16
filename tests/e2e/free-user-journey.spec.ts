@@ -15,6 +15,7 @@ test.describe("Free user — register → problem → evaluate → UML saved", (
     await page.getByTestId("register-name").fill("E2E Free Register");
     await page.getByTestId("register-email").fill(email);
     await page.getByTestId("register-password").fill(password);
+    await page.getByTestId("register-phone").fill("9876543210");
     await page.getByTestId("register-submit").click();
 
     await expect(page.getByRole("heading", { name: /LLD Hub/i })).toBeVisible({ timeout: 60_000 });
