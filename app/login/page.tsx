@@ -97,7 +97,7 @@ export default function LoginPage() {
           <h1 className="text-2xl font-bold mt-3">{needPhone ? "Finish signing in" : "Welcome back"}</h1>
           <p className="text-gray-500 text-sm mt-1">
             {needPhone
-              ? "Add a mobile number to complete your account. We only use it if we need to reach you about your account — never for marketing."
+              ? "Add a mobile number to complete your account."
               : "Sign in to continue your LLD practice"}
           </p>
         </div>
