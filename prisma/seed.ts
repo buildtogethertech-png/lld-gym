@@ -3,6 +3,13 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function main() {
+  // A single global offer row. Edit it in Prisma Studio; seeding never overwrites your changes.
+  await prisma.$executeRaw`
+    INSERT INTO "offer_configs" ("id", "name", "discountPct", "startsAt", "endsAt", "active", "updatedAt")
+    VALUES ('global', 'Diwali Offer', 50, NOW(), NOW() + INTERVAL '1 day', false, NOW())
+    ON CONFLICT ("id") DO NOTHING
+  `;
+
   // Free plan
   await prisma.planConfig.upsert({
     where: { slug: "free" },

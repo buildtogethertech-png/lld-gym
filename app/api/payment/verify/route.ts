@@ -33,8 +33,6 @@ export async function POST(req: NextRequest) {
     const razorpay_order_id   = body.razorpay_order_id   as string | undefined;
     const razorpay_payment_id = body.razorpay_payment_id as string | undefined;
     const razorpay_signature  = body.razorpay_signature  as string | undefined;
-    const planSlugRaw         = (body.plan as string | undefined) ?? "plan_twelvemonth";
-    const planSlug            = planSlugRaw.startsWith("plan_") ? planSlugRaw : `plan_${planSlugRaw}`;
 
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
       return NextResponse.json(
@@ -63,14 +61,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true, alreadyProcessed: true });
     }
 
-    // All plan config comes from DB — no hardcoded PLAN_MAP
+    const checkoutOrder = await prisma.razorpayOrder.findUnique({ where: { razorpayId: razorpay_order_id } });
+    if (!checkoutOrder || checkoutOrder.userId !== uid) {
+      return NextResponse.json({ error: "Payment order does not belong to this account." }, { status: 400 });
+    }
+
+    // Use the stored order values so an offer ending during checkout never changes the charged amount.
+    const planSlug = checkoutOrder.planSlug;
     const planConfig = await prisma.planConfig.findUnique({ where: { slug: planSlug } })
                     ?? await prisma.planConfig.findUnique({ where: { slug: "paid" } });
     if (!planConfig) return NextResponse.json({ error: "Plan config not found." }, { status: 500 });
     if (!planConfig.months) return NextResponse.json({ error: "Plan has no duration configured." }, { status: 500 });
 
     const planExpiry = getPlanExpiry(planConfig.months);
-    const amountInr  = planConfig.priceInr ?? 0;
+    const amountInr  = checkoutOrder.amountInr;
 
     invalidatePlanCache();
 

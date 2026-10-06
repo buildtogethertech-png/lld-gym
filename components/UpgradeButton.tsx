@@ -57,6 +57,13 @@ export default function UpgradeButton({ className, label, planId = "twelvemonth"
     if (!session) { router.push("/login"); return; }
     setLoading(true);
 
+    // Save a follow-up lead as soon as a signed-in user chooses a paid plan.
+    void fetch("/api/payment/intent", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ plan: planId }),
+    });
+
     if (!window.Razorpay) {
       await new Promise<void>((resolve) => {
         const script = document.createElement("script");

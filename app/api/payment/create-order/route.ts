@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUid } from "@/lib/get-uid";
 import { prisma } from "@/lib/prisma";
+import { getActiveOffer, priceWithOffer } from "@/lib/offers";
 import Razorpay from "razorpay";
 
 export async function POST(req: NextRequest) {
@@ -33,9 +34,14 @@ export async function POST(req: NextRequest) {
     select: { email: true },
   });
 
+  const chargeAmountInr = priceWithOffer(planConfig.priceInr, await getActiveOffer());
+  if (!chargeAmountInr) {
+    return NextResponse.json({ error: "Plan has no price configured" }, { status: 400 });
+  }
+
   const razorpay = new Razorpay({ key_id: keyId, key_secret: keySecret });
 
-  const amountPaise = planConfig.priceInr * 100;
+  const amountPaise = chargeAmountInr * 100;
   const order = await razorpay.orders.create({
     amount: amountPaise,
     currency: "INR",
@@ -48,7 +54,7 @@ export async function POST(req: NextRequest) {
       razorpayId: order.id,
       userId: uid,
       planSlug,
-      amountInr: planConfig.priceInr,
+      amountInr: chargeAmountInr,
     },
   });
 

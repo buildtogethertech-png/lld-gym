@@ -13,8 +13,6 @@ export default function PhoneCapture() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [phone, setPhone] = useState("");
-  const [communityUrl, setCommunityUrl] = useState<string | null>(null);
-  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     if (status !== "authenticated") return;
@@ -24,7 +22,6 @@ export default function PhoneCapture() {
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         if (!d) return;
-        if (d.communityUrl) setCommunityUrl(d.communityUrl);
         if (d.needsPhone) {
           setPhone(displayPhone(d.phone));
           setOpen(true);
@@ -48,36 +45,13 @@ export default function PhoneCapture() {
         </div>
 
         <div className="px-5 py-4">
-          {saved ? (
-            <div className="space-y-3">
-              <p className="text-sm text-green-400">Number saved.</p>
-              {communityUrl && (
-                <a
-                  href={communityUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block w-full text-center bg-[#25D366] hover:bg-[#1ebe5d] text-black font-semibold text-sm py-2.5 rounded-xl transition-colors"
-                >
-                  Join the LLDHub WhatsApp community
-                </a>
-              )}
-              <button
-                onClick={() => setOpen(false)}
-                className="w-full text-xs text-gray-500 hover:text-gray-300 py-1"
-              >
-                Continue
-              </button>
-            </div>
-          ) : (
-            <PhoneField
-              initialPhone={phone}
-              onSaved={async () => {
-                const d = await fetch("/api/user/phone").then((r) => r.json()).catch(() => null);
-                if (d?.communityUrl) setCommunityUrl(d.communityUrl);
-                setSaved(true);
-              }}
-            />
-          )}
+          <PhoneField
+            initialPhone={phone}
+            onSaved={() => {
+              setOpen(false);
+              window.dispatchEvent(new Event("phone-saved"));
+            }}
+          />
         </div>
       </div>
     </div>

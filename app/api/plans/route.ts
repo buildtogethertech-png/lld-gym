@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getActiveOffer, priceWithOffer } from "@/lib/offers";
 
 export const dynamic = "force-dynamic";
 
@@ -9,7 +10,8 @@ export const dynamic = "force-dynamic";
  */
 export async function GET() {
   try {
-    const dbPlans = await prisma.planConfig.findMany({
+    const [dbPlans, offer] = await Promise.all([
+      prisma.planConfig.findMany({
       where: { active: true},
       orderBy: {
         months: {
@@ -28,18 +30,24 @@ export async function GET() {
         tag: true,
         features: true,
       },
-    });
+      }),
+      getActiveOffer(),
+    ]);
 
     const plans = dbPlans.map((p) => ({
       id: p.slug.replace("plan_", ""),
       slug: p.slug,
       name: p.name,
-      priceInr: p.priceInr,
+      priceInr: priceWithOffer(p.priceInr, offer),
       // originalPrice: back-calculated from discountPct so priceInr is always the final price
-      originalPriceInr: p.discountPct && p.priceInr
+      originalPriceInr: offer && p.priceInr
+        ? p.priceInr
+        : p.discountPct && p.priceInr
         ? Math.round(p.priceInr / (1 - p.discountPct / 100))
         : null,
-      discountPct: p.discountPct,
+      discountPct: offer?.discountPct ?? p.discountPct,
+      offerName: offer?.name ?? null,
+      offerEndsAt: offer?.endsAt.toISOString() ?? null,
       months: p.months,
       tag: p.tag,
       features: p.features,

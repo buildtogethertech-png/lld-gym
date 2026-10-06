@@ -40,6 +40,17 @@ export default function NavBar() {
           <Link href="/pricing" className="text-sm text-yellow-400 hover:text-yellow-300 transition-colors hidden sm:block font-medium">
             Pricing
           </Link>
+          <a
+            href="https://discord.gg/eGfYx8YHy"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden items-center gap-1.5 rounded-lg border border-[#5865f2]/35 bg-[#5865f2]/10 px-2.5 py-1.5 text-xs font-semibold text-[#aab2ff] transition-colors hover:border-[#5865f2]/70 hover:bg-[#5865f2]/20 hover:text-white sm:flex"
+          >
+            <svg aria-hidden="true" className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19.54 4.54A16.45 16.45 0 0 0 15.5 3.3l-.5 1a15.25 15.25 0 0 0-6 0l-.5-1a16.36 16.36 0 0 0-4.05 1.25C1.9 8.35 1.2 12.06 1.55 15.72a16.59 16.59 0 0 0 4.97 2.5l1.2-1.62a9.55 9.55 0 0 1-1.88-.9l.45-.35c3.63 1.67 7.77 1.67 11.36 0l.45.35c-.6.35-1.23.65-1.88.9l1.2 1.62a16.46 16.46 0 0 0 4.98-2.5c.42-4.24-.72-7.92-2.86-11.18ZM8.85 13.47c-1.1 0-2-1-2-2.24s.88-2.24 2-2.24c1.12 0 2.02 1 2 2.24 0 1.24-.88 2.24-2 2.24Zm6.3 0c-1.1 0-2-1-2-2.24s.88-2.24 2-2.24c1.12 0 2.02 1 2 2.24 0 1.24-.88 2.24-2 2.24Z" />
+            </svg>
+            Community
+          </a>
 
           {status === "loading" ? (
             <div className="w-7 h-7 rounded-full bg-gray-800 animate-pulse" />

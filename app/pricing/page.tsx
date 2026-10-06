@@ -13,6 +13,8 @@ interface PlanData {
   priceInr: number | null;
   originalPriceInr: number | null;
   discountPct: number | null;
+  offerName: string | null;
+  offerEndsAt: string | null;
   months: number | null;
   tag: string | null;
   features: string[];
@@ -21,6 +23,39 @@ interface PlanData {
 
 interface PlansResponse {
   plans: PlanData[];
+}
+
+function OfferCountdown({ endsAt }: { endsAt: string }) {
+  const [remainingMs, setRemainingMs] = useState(() => Math.max(0, new Date(endsAt).getTime() - Date.now()));
+
+  useEffect(() => {
+    const update = () => setRemainingMs(Math.max(0, new Date(endsAt).getTime() - Date.now()));
+    update();
+    const timer = window.setInterval(update, 1_000);
+    return () => window.clearInterval(timer);
+  }, [endsAt]);
+
+  if (remainingMs <= 0) return null;
+
+  const totalSeconds = Math.floor(remainingMs / 1_000);
+  const days = Math.floor(totalSeconds / 86_400);
+  const hours = Math.floor((totalSeconds % 86_400) / 3_600);
+  const minutes = Math.floor((totalSeconds % 3_600) / 60);
+  const seconds = totalSeconds % 60;
+  const units = days > 0
+    ? [[days, "days"], [hours, "hrs"], [minutes, "min"]]
+    : [[hours, "hrs"], [minutes, "min"], [seconds, "sec"]];
+
+  return (
+    <div className="flex items-center justify-center gap-1.5 text-xs font-bold tabular-nums text-white">
+      <span className="text-rose-200/75">Ends in</span>
+      {units.map(([value, label]) => (
+        <span key={label} className="rounded-md border border-white/15 bg-black/25 px-1.5 py-1">
+          {String(value).padStart(2, "0")}<span className="ml-0.5 text-[10px] font-medium text-rose-100/70">{label}</span>
+        </span>
+      ))}
+    </div>
+  );
 }
 
 export default function PricingPage() {
@@ -79,10 +114,11 @@ export default function PricingPage() {
   }
 
   const plans = plansData?.plans ?? [];
+  const activeOffer = plans.find((plan) => plan.offerName);
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="mb-6">
+    <div className="mx-auto max-w-6xl">
+      <div className="mb-3">
         <Link href="/" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-300 transition-colors">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -91,9 +127,23 @@ export default function PricingPage() {
         </Link>
       </div>
 
-      <div className="text-center mb-10">
-        <h1 className="text-3xl font-bold mb-2">Unlock LLD Hub</h1>
-        <p className="text-gray-400">AI-powered evaluation. Real interview feedback. All problems.</p>
+      <div className="mb-6 text-center">
+        <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-yellow-400">Practice with confidence</p>
+        <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">Unlock your complete LLD prep.</h1>
+        <p className="mx-auto mt-2 max-w-xl text-sm leading-5 text-gray-400">AI-powered evaluations, interview-style feedback, and every problem in one place.</p>
+        {activeOffer && (
+          <div className="relative mx-auto mt-4 max-w-2xl overflow-hidden rounded-2xl border border-amber-300/30 bg-[#21180a] p-1 shadow-[0_18px_60px_rgba(245,158,11,0.16)]">
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(245,158,11,0.24),transparent_55%)]" />
+            <div className="relative grid items-center gap-2 rounded-xl bg-[#171207]/80 px-4 py-3 text-left sm:grid-cols-[1fr_auto] sm:px-5">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-amber-300">Live offer</p>
+                <p className="mt-0.5 text-base font-bold text-white">{activeOffer.offerName} <span className="text-amber-300">· {activeOffer.discountPct}% OFF</span></p>
+                <p className="mt-0.5 text-[11px] text-amber-100/65">Applied automatically to every paid plan.</p>
+              </div>
+              {activeOffer.offerEndsAt && <OfferCountdown endsAt={activeOffer.offerEndsAt} />}
+            </div>
+          </div>
+        )}
         {planExpired && planExpiry && (
           <div className="mt-5 mx-auto max-w-md rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-100/95">
             Your access ended on{" "}
@@ -107,19 +157,13 @@ export default function PricingPage() {
         )}
       </div>
 
-      {/* Free + paid plans side by side */}
-      {/* Free gets 0.75fr, each paid plan gets 1fr */}
-      <div
-        className="grid gap-4 mb-8 items-start"
-        style={{
-          gridTemplateColumns: plans.length > 0
-            ? `0.75fr ${plans.slice(1).map(() => "1fr").join(" ")}`
-            : "1fr",
-        }}
-      >
+      <div className="grid items-stretch gap-3 sm:grid-cols-2 xl:grid-cols-[0.82fr_1fr_1fr_1fr]">
         {plans.map((plan) => {
           const isRecommended = !!plan.tag;
           const isFreeTier = plan.slug === "free" || plan.priceInr == null;
+          const savings = plan.originalPriceInr && plan.priceInr
+            ? plan.originalPriceInr - plan.priceInr
+            : null;
           const canShowPerMonth =
             typeof plan.priceInr === "number" &&
             typeof plan.months === "number" &&
@@ -133,21 +177,21 @@ export default function PricingPage() {
           return (
             <div
               key={plan.id}
-              className={`rounded-xl p-5 relative flex flex-col ${
+              className={`relative flex min-h-[320px] flex-col overflow-hidden rounded-2xl border p-4 transition-transform duration-200 hover:-translate-y-1 ${
                 isRecommended
-                  ? "bg-yellow-400/5 border-2 border-yellow-400"
+                  ? "border-amber-300 bg-[linear-gradient(155deg,rgba(95,68,8,0.48),rgba(25,22,12,1)_46%)] shadow-[0_20px_45px_rgba(234,179,8,0.14)]"
                   : isFreeTier
-                    ? "bg-[#121212] border border-gray-600/80"
-                    : "bg-[#161616] border border-gray-700"
+                    ? "border-gray-700 bg-[#121316]"
+                    : "border-gray-700/90 bg-[#15161a] hover:border-gray-600"
               }`}
             >
               {isRecommended && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-yellow-400 text-black text-xs font-bold px-2.5 py-0.5 rounded-full whitespace-nowrap">
+                <div className="absolute left-1/2 top-0 -translate-x-1/2 rounded-b-lg bg-amber-300 px-3 py-1 text-[10px] font-extrabold uppercase tracking-wide text-black shadow-lg">
                   {plan.tag}
                 </div>
               )}
               {!isFreeTier && (
-                <p className={`text-xs font-semibold uppercase tracking-wide mb-1 ${isRecommended ? "text-yellow-400" : "text-gray-400"}`}>
+                <p className={`mb-1.5 text-[11px] font-bold uppercase tracking-[0.14em] ${isRecommended ? "mt-2 text-amber-300" : "text-gray-400"}`}>
                   {plan.name}
                 </p>
               )}
@@ -158,26 +202,24 @@ export default function PricingPage() {
                 </>
               ) : isFreeTier ? (
                 <>
-                  <p className="text-3xl font-bold mb-0.5 tracking-tight text-white">Free</p>
-                  <p className="text-xs text-gray-500 mb-5">Forever · no card required</p>
+                  <p className="text-3xl font-bold tracking-tight text-white">Free</p>
+                  <p className="mb-4 mt-0.5 text-xs text-gray-500">Forever · no card required</p>
                 </>
               ) : (
                 <>
-                  <div className="flex items-baseline gap-2 mb-0.5">
-                    <p className="text-3xl font-bold">₹{plan.priceInr}</p>
-                    {plan.originalPriceInr && (
-                      <p className="text-sm text-gray-500 line-through">₹{plan.originalPriceInr}</p>
-                    )}
-                    {plan.discountPct && (
-                      <span className="text-xs font-bold text-green-400 bg-green-400/10 border border-green-400/20 px-1.5 py-0.5 rounded-full">
-                        -{plan.discountPct}%
-                      </span>
-                    )}
+                  <div className="mb-1 flex items-end gap-2">
+                    <p className="text-3xl font-bold tracking-tight text-white">₹{plan.priceInr}</p>
+                    {plan.originalPriceInr && <p className="mb-0.5 text-xs text-gray-500 line-through">₹{plan.originalPriceInr}</p>}
                   </div>
-                  <p className="text-xs text-gray-500 mb-5">{paidSubtitle}</p>
+                  <div className="mb-4 flex items-center gap-2">
+                    {plan.discountPct && <span className="rounded-md border border-emerald-400/25 bg-emerald-400/10 px-1.5 py-0.5 text-[10px] font-bold text-emerald-300">SAVE {plan.discountPct}%</span>}
+                    {savings && <span className="text-[11px] font-medium text-emerald-400">You save ₹{savings}</span>}
+                  </div>
+                  <p className="-mt-3 mb-4 text-[11px] text-gray-500">{paidSubtitle} · one-time payment</p>
                 </>
               )}
-              <ul className="space-y-2 text-xs text-gray-300 mb-5 flex-1">
+              <div className="mb-3 h-px bg-white/[0.07]" />
+              <ul className="mb-4 flex-1 space-y-1.5 text-xs text-gray-300">
                 {plan.featureLabels.map((label) => (
                   <li key={label} className="flex items-start gap-1.5">
                     <span className="text-green-400 mt-px shrink-0">✓</span>
@@ -205,10 +247,10 @@ export default function PricingPage() {
                 <UpgradeButton
                   planId={plan.id}
                   label={`Get ${plan.name}`}
-                  className={`w-full font-bold py-2 rounded-xl text-xs transition-all disabled:opacity-50 ${
+                  className={`w-full rounded-xl py-2 text-xs font-bold transition-all disabled:opacity-50 ${
                     isRecommended
-                      ? "bg-yellow-400 hover:bg-yellow-300 text-black"
-                      : "bg-gray-700 hover:bg-gray-600 text-white"
+                      ? "bg-amber-300 text-black shadow-[0_8px_18px_rgba(245,158,11,0.18)] hover:bg-amber-200"
+                      : "bg-[#38445a] text-white hover:bg-[#46536b]"
                   }`}
                 />
               )}
@@ -217,8 +259,8 @@ export default function PricingPage() {
         })}
       </div>
 
-      <p className="text-center text-xs text-gray-600 mb-10">
-        Secure payment via Razorpay · UPI, cards, net banking, wallets, EMI and pay later (where enabled on your account)
+      <p className="mb-8 mt-4 text-center text-xs text-gray-500">
+        Secure checkout via Razorpay · UPI, cards, net banking, wallets, EMI and pay later
       </p>
 
       <div className="border-t border-gray-800 pt-8 space-y-4">

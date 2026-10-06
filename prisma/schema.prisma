@@ -45,6 +45,36 @@ model PlanConfig {
   @@map("plan_configs")
 }
 
+// A single global, time-bound promotion. Edit this row in Prisma Studio to run an offer.
+model OfferConfig {
+  id          String   @id @default("global")
+  name        String
+  discountPct Int
+  startsAt    DateTime
+  endsAt      DateTime
+  active      Boolean  @default(false)
+  updatedAt   DateTime @updatedAt
+
+  @@map("offer_configs")
+}
+
+// Contact snapshot for a signed-in user who starts a checkout, for sales follow-up.
+model PurchaseIntent {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String?
+  email     String
+  phone     String?
+  planSlug  String
+  amountInr Int
+  offerName String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([userId])
+  @@map("purchase_intents")
+}
+
 model User {
   id         String    @id @default(cuid())
   email      String    @unique
@@ -62,6 +92,8 @@ model User {
   emailUnsubscribed Boolean @default(false)
   hideSolutionFromCommunity Boolean @default(false)
   phone      String?
+  discordCommunityJoinedAt DateTime?
+  discordCommunityReminderAt DateTime?
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
 
