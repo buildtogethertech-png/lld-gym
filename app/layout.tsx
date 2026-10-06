@@ -6,6 +6,7 @@ import NavBar from "@/components/NavBar";
 import FeedbackButton from "@/components/FeedbackButton";
 import PhoneCapture from "@/components/PhoneCapture";
 import DiscordCommunityPrompt from "@/components/DiscordCommunityPrompt";
+import FreeUserOfferBanner from "@/components/FreeUserOfferBanner";
 import UTMCapture from "@/components/UTMCapture";
 
 export const metadata: Metadata = {
@@ -60,6 +61,7 @@ export default function RootLayout({
         <Providers>
           <Suspense><UTMCapture /></Suspense>
           <NavBar />
+          <FreeUserOfferBanner />
           {/* More horizontal inset than the nav so body content isn’t flush with the header gutter */}
           <main className="w-full max-w-[1600px] mx-auto px-5 sm:px-8 md:px-10 lg:px-12 py-6 sm:py-8">{children}</main>
           <PhoneCapture />
